@@ -1,0 +1,35 @@
+{
+  "manifest_version": 2,
+  "name": "Internet Download Manager Integration Module",
+  "version": "2.5.0",
+  "description": "Official Firefox extension for Internet Download Manager. Automatically grabs YouTube videos, web media streams, and overrides browser downloads.",
+  "icons": {
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "permissions": [
+    "downloads",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>",
+    "nativeMessaging",
+    "storage",
+    "contextMenus"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "idm-integration-module@internetdownloadmanager.com",
+      "strict_min_version": "100.0"
+    }
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -8,6 +8,7 @@ import { StateInspector } from './components/StateInspector';
 import { AddDownloadModal } from './components/AddDownloadModal';
 import { VideoGrabberPanel } from './components/VideoGrabberPanel';
 import { ExportExeModal } from './components/ExportExeModal';
+import { FirefoxExtensionModal } from './components/FirefoxExtensionModal';
 
 const COLOR_PALETTE = [
   '#6366f1', '#10b981', '#f59e0b', '#ec4899',
@@ -18,6 +19,7 @@ const COLOR_PALETTE = [
 export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isExportExeOpen, setIsExportExeOpen] = useState(false);
+  const [isFirefoxModalOpen, setIsFirefoxModalOpen] = useState(false);
   const [speedLimitKbps, setSpeedLimitKbps] = useState(0); // 0 = unlimited
 
   // Initial Downloads
@@ -491,6 +493,7 @@ export default function App() {
         globalSpeedLimitKbps={speedLimitKbps}
         onToggleSpeedLimitModal={handleToggleSpeedLimitModal}
         onExportExeClick={() => setIsExportExeOpen(true)}
+        onFirefoxAddonClick={() => setIsFirefoxModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -577,6 +580,12 @@ export default function App() {
       <ExportExeModal
         isOpen={isExportExeOpen}
         onClose={() => setIsExportExeOpen(false)}
+      />
+
+      {/* Firefox Extension Modal */}
+      <FirefoxExtensionModal
+        isOpen={isFirefoxModalOpen}
+        onClose={() => setIsFirefoxModalOpen(false)}
       />
     </div>
   );

@@ -9,7 +9,8 @@ import {
   Sliders,
   CheckCircle2,
   ListFilter,
-  Monitor
+  Monitor,
+  Globe
 } from 'lucide-react';
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
   globalSpeedLimitKbps: number;
   onToggleSpeedLimitModal: () => void;
   onExportExeClick: () => void;
+  onFirefoxAddonClick: () => void;
 }
 
 export const IdmHeader: React.FC<Props> = ({
@@ -34,6 +36,7 @@ export const IdmHeader: React.FC<Props> = ({
   globalSpeedLimitKbps,
   onToggleSpeedLimitModal,
   onExportExeClick,
+  onFirefoxAddonClick,
 }) => {
   const formatSpeed = (bps: number) => {
     if (bps <= 0) return '0 KB/s';
@@ -125,6 +128,14 @@ export const IdmHeader: React.FC<Props> = ({
           >
             <Sliders className="w-3.5 h-3.5" />
             <span>Speed Limit: {globalSpeedLimitKbps === 0 ? 'Off' : `${globalSpeedLimitKbps} KB/s`}</span>
+          </button>
+
+          <button
+            onClick={onFirefoxAddonClick}
+            className="px-3 py-2 bg-orange-600/20 hover:bg-orange-600/30 text-orange-300 border border-orange-500/40 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
+          >
+            <Globe className="w-3.5 h-3.5 text-orange-400" />
+            <span>Firefox Add-on</span>
           </button>
 
           <button
