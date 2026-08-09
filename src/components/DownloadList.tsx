@@ -26,6 +26,7 @@ interface Props {
   onDeleteTask: (id: string) => void;
   onOpenAddModal: () => void;
   onClearCompleted?: () => void;
+  onSaveToDisk?: (task: DownloadTask, forcePicker: boolean) => void;
 }
 
 export const DownloadList: React.FC<Props> = ({
@@ -37,6 +38,7 @@ export const DownloadList: React.FC<Props> = ({
   onDeleteTask,
   onOpenAddModal,
   onClearCompleted,
+  onSaveToDisk,
 }) => {
   const [statusFilter, setStatusFilter] = useState<'All' | 'Downloading' | 'Paused' | 'Completed'>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -222,10 +224,30 @@ export const DownloadList: React.FC<Props> = ({
                         Resume
                       </button>
                     ) : (
-                      <span className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg border border-emerald-500/30 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Completed
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onSaveToDisk) onSaveToDisk(task, true);
+                          }}
+                          className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg border border-indigo-400/30 flex items-center gap-1.5 transition-all shadow-sm"
+                          title="Select a custom folder on your computer to save this file"
+                        >
+                          <Folder className="w-3.5 h-3.5 text-indigo-200" />
+                          <span>Choose Folder & Save</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onSaveToDisk) onSaveToDisk(task, false);
+                          }}
+                          className="px-2.5 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-semibold rounded-lg border border-emerald-500/40 flex items-center gap-1.5 transition-all shadow-sm"
+                          title="Save directly to Downloads folder"
+                        >
+                          <Download className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Save to Downloads</span>
+                        </button>
+                      </div>
                     )}
 
                     <button

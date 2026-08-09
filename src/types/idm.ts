@@ -47,6 +47,7 @@ export interface DownloadTask {
   createdAt: string;
   completedAt?: string;
   savePath: string;
+  blobUrl?: string;
 }
 
 export interface BandwidthPoint {

@@ -36,6 +36,17 @@ if (typeof browser !== 'undefined' && browser.downloads) {
       const targetUrl = info.linkUrl || info.srcUrl;
       if (targetUrl) {
         console.log('[IDM Firefox] Context menu download trigger:', targetUrl);
+        fetch(`${IDM_HOST}/api/downloads`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: targetUrl,
+            filename: targetUrl.split('/').pop().split('?')[0] || 'downloaded_file',
+            referrer: info.pageUrl || '',
+          }),
+        }).catch((err) => {
+          console.warn('[IDM Firefox] Could not send to IDM engine at localhost:3000:', err);
+        });
       }
     }
   });

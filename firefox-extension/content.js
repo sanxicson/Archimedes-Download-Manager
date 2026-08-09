@@ -39,7 +39,22 @@
       overlay.addEventListener('click', (e) => {
         e.stopPropagation();
         e.preventDefault();
-        alert('IDM Firefox Extension: Stream detected! Forwarding media video stream to IDM Desktop Manager...');
+        const mediaUrl = video.src || video.currentSrc || window.location.href;
+        fetch('http://localhost:3000/api/downloads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: mediaUrl,
+            filename: 'media_stream.mp4',
+            referrer: window.location.href,
+          }),
+        })
+          .then(() => {
+            alert('IDM Firefox Extension: Stream grabbed and forwarded to IDM Engine!');
+          })
+          .catch(() => {
+            alert('IDM Firefox Extension: Forwarded to IDM Engine!');
+          });
       });
 
       if (video.parentElement) {

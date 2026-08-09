@@ -5,11 +5,7 @@ import {
   Pause,
   Gauge,
   Plus,
-  RefreshCcw,
   Sliders,
-  CheckCircle2,
-  ListFilter,
-  Monitor,
   Globe
 } from 'lucide-react';
 
@@ -22,8 +18,7 @@ interface Props {
   totalSpeedBps: number;
   globalSpeedLimitKbps: number;
   onToggleSpeedLimitModal: () => void;
-  onExportExeClick: () => void;
-  onFirefoxAddonClick: () => void;
+  onInstallExtensionClick: () => void;
 }
 
 export const IdmHeader: React.FC<Props> = ({
@@ -35,8 +30,7 @@ export const IdmHeader: React.FC<Props> = ({
   totalSpeedBps,
   globalSpeedLimitKbps,
   onToggleSpeedLimitModal,
-  onExportExeClick,
-  onFirefoxAddonClick,
+  onInstallExtensionClick,
 }) => {
   const formatSpeed = (bps: number) => {
     if (bps <= 0) return '0 KB/s';
@@ -131,23 +125,14 @@ export const IdmHeader: React.FC<Props> = ({
           </button>
 
           <button
-            onClick={onFirefoxAddonClick}
-            className="px-3 py-2 bg-orange-600/20 hover:bg-orange-600/30 text-orange-300 border border-orange-500/40 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
+            onClick={onInstallExtensionClick}
+            className="px-3 py-2 bg-gradient-to-r from-orange-500 to-indigo-600 hover:brightness-110 text-white text-xs font-extrabold rounded-lg shadow-md flex items-center gap-1.5 transition-all shrink-0 active:scale-95 border border-orange-400/30"
           >
-            <Globe className="w-3.5 h-3.5 text-orange-400" />
-            <span>Firefox Add-on</span>
-          </button>
-
-          <button
-            onClick={onExportExeClick}
-            className="px-3 py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:brightness-110 text-white text-xs font-bold rounded-lg shadow-md flex items-center gap-1.5 transition-all shrink-0 active:scale-95 border border-sky-400/30"
-          >
-            <Monitor className="w-3.5 h-3.5" />
-            <span>Desktop .EXE</span>
+            <Globe className="w-3.5 h-3.5 text-orange-200" />
+            <span>Install Extension (1-Click)</span>
           </button>
         </div>
       </div>
     </header>
   );
 };
-

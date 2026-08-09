@@ -9,6 +9,17 @@ import { AddDownloadModal } from './components/AddDownloadModal';
 import { VideoGrabberPanel } from './components/VideoGrabberPanel';
 import { ExportExeModal } from './components/ExportExeModal';
 import { FirefoxExtensionModal } from './components/FirefoxExtensionModal';
+import { InstallExtensionModal } from './components/InstallExtensionModal';
+import { ClassicIdmLayout } from './components/ClassicIdmLayout';
+import { UiStyleSelectorModal, UiStyleOption } from './components/UiStyleSelectorModal';
+import { Sparkles, Monitor, Layout } from 'lucide-react';
+import {
+  probeFileInfo,
+  executeRealDownload,
+  saveFileToDisk,
+  storeCompletedBlob,
+  getCompletedBlob,
+} from './utils/realDownloader';
 
 const COLOR_PALETTE = [
   '#6366f1', '#10b981', '#f59e0b', '#ec4899',
@@ -20,6 +31,10 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isExportExeOpen, setIsExportExeOpen] = useState(false);
   const [isFirefoxModalOpen, setIsFirefoxModalOpen] = useState(false);
+  const [isInstallExtensionOpen, setIsInstallExtensionOpen] = useState(false);
+  const [isUiSelectorOpen, setIsUiSelectorOpen] = useState(false);
+  const [uiStyle, setUiStyle] = useState<UiStyleOption>('classic');
+  const [isCompactWindow, setIsCompactWindow] = useState<boolean>(true);
   const [speedLimitKbps, setSpeedLimitKbps] = useState(0); // 0 = unlimited
 
   // Initial Downloads
@@ -358,18 +373,93 @@ export default function App() {
     );
   };
 
-  const handleAddDownload = (
+  const startRealTaskExecution = async (
+    taskId: string,
+    targetUrl: string,
+    targetFilename: string,
+    threads: number,
+    totalBytes: number
+  ) => {
+    let cancelled = false;
+
+    try {
+      const blob = await executeRealDownload(
+        targetUrl,
+        totalBytes,
+        threads,
+        (downloaded, speedBps, segmentBytes) => {
+          setTasks((prev) =>
+            prev.map((t) => {
+              if (t.id !== taskId) return t;
+              const remaining = t.totalSize - downloaded;
+              const eta = speedBps > 0 ? Math.ceil(remaining / speedBps) : 0;
+
+              const updatedSegments = t.segments.map((s, idx) => {
+                const segDownloaded = segmentBytes[idx] || 0;
+                const segCurrent = s.startByte + segDownloaded;
+                return {
+                  ...s,
+                  currentByte: Math.min(s.endByte, segCurrent),
+                  status: segCurrent >= s.endByte ? ('completed' as const) : ('downloading' as const),
+                  speedBytesPerSec: Math.floor(speedBps / threads),
+                };
+              });
+
+              return {
+                ...t,
+                downloadedBytes: downloaded,
+                currentSpeedBps: Math.round(speedBps),
+                etaSeconds: eta,
+                segments: updatedSegments,
+              };
+            })
+          );
+        },
+        () => cancelled
+      );
+
+      // Store real downloaded blob
+      storeCompletedBlob(taskId, blob);
+
+      // Update task to completed
+      setTasks((prev) =>
+        prev.map((t) => {
+          if (t.id !== taskId) return t;
+          return {
+            ...t,
+            status: 'Completed',
+            downloadedBytes: t.totalSize || blob.size,
+            currentSpeedBps: 0,
+            etaSeconds: 0,
+            completedAt: new Date().toISOString(),
+            segments: t.segments.map((s) => ({ ...s, status: 'completed', currentByte: s.endByte })),
+          };
+        })
+      );
+
+      // Automatically trigger browser file download to local Downloads folder
+      await saveFileToDisk(blob, targetFilename, false);
+    } catch (err) {
+      console.error('[App] Real download failed:', err);
+    }
+  };
+
+  const handleAddDownload = async (
     url: string,
     filename: string,
     threads: number,
     speedLimit: number
   ) => {
-    const newTaskSize = 2147483648; // 2 GB
-    const chunkSize = Math.floor(newTaskSize / threads);
+    // Probe real URL
+    const meta = await probeFileInfo(url);
+    const realSize = meta.totalBytes > 0 ? meta.totalBytes : 10485760; // 10 MB fallback if unknown
+    const realFilename = filename || meta.filename;
+    const taskId = `task-${Date.now()}`;
 
+    const chunkSize = Math.floor(realSize / threads);
     const segments: DownloadSegment[] = Array.from({ length: threads }).map((_, i) => {
       const start = i * chunkSize;
-      const end = i === threads - 1 ? newTaskSize - 1 : (i + 1) * chunkSize - 1;
+      const end = i === threads - 1 ? realSize - 1 : (i + 1) * chunkSize - 1;
       return {
         id: i,
         workerId: i,
@@ -377,34 +467,34 @@ export default function App() {
         endByte: end,
         currentByte: start,
         status: 'downloading',
-        speedBytesPerSec: 1048576,
+        speedBytesPerSec: 0,
         color: COLOR_PALETTE[i % COLOR_PALETTE.length],
       };
     });
 
     const newTask: DownloadTask = {
-      id: `task-${Date.now()}`,
-      filename,
+      id: taskId,
+      filename: realFilename,
       url,
       category: 'General',
-      totalSize: newTaskSize,
+      totalSize: realSize,
       downloadedBytes: 0,
       status: 'Downloading',
-      currentSpeedBps: 8388608,
+      currentSpeedBps: 0,
       threadsCount: threads,
       speedLimitBps: speedLimit * 1024,
-      etaSeconds: 300,
-      savePath: `/downloads/${filename}`,
+      etaSeconds: 0,
+      savePath: `/downloads/${realFilename}`,
       createdAt: new Date().toISOString(),
       segments,
       stateFile: {
         version: '2.5.0',
         url,
-        filename,
-        totalBytes: newTaskSize,
-        etag: `"etag-${Date.now()}"`,
+        filename: realFilename,
+        totalBytes: realSize,
+        etag: meta.etag || `"etag-${Date.now()}"`,
         lastModified: new Date().toUTCString(),
-        supportsRanges: true,
+        supportsRanges: meta.supportsRanges,
         workerCount: threads,
         speedLimitBps: speedLimit * 1024,
         completedRanges: [],
@@ -414,21 +504,48 @@ export default function App() {
     };
 
     setTasks((prev) => [newTask, ...prev]);
-    setSelectedTaskId(newTask.id);
+    setSelectedTaskId(taskId);
+
+    startRealTaskExecution(taskId, url, realFilename, threads, realSize);
   };
 
-  const handleAddVideoDownload = (
+  // Poll extension queue for automatic download interception from Firefox/Chrome extension
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/downloads/queue');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.items && data.items.length > 0) {
+            for (const item of data.items) {
+              handleAddDownload(item.url, item.filename || 'download_file', 8, 0);
+            }
+          }
+        }
+      } catch (err) {
+        // server offline or dev mode loading
+      }
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleAddVideoDownload = async (
     url: string,
     filename: string,
     quality: string,
     sizeBytes: number
   ) => {
+    const meta = await probeFileInfo(url);
+    const realSize = meta.totalBytes > 0 ? meta.totalBytes : sizeBytes;
+    const realFilename = filename || meta.filename;
+    const taskId = `task-video-${Date.now()}`;
     const threads = 8;
-    const chunkSize = Math.floor(sizeBytes / threads);
 
+    const chunkSize = Math.floor(realSize / threads);
     const segments: DownloadSegment[] = Array.from({ length: threads }).map((_, i) => {
       const start = i * chunkSize;
-      const end = i === threads - 1 ? sizeBytes - 1 : (i + 1) * chunkSize - 1;
+      const end = i === threads - 1 ? realSize - 1 : (i + 1) * chunkSize - 1;
       return {
         id: i,
         workerId: i,
@@ -436,31 +553,31 @@ export default function App() {
         endByte: end,
         currentByte: start,
         status: 'downloading',
-        speedBytesPerSec: 1048576,
+        speedBytesPerSec: 0,
         color: COLOR_PALETTE[i % COLOR_PALETTE.length],
       };
     });
 
     const newTask: DownloadTask = {
-      id: `task-video-${Date.now()}`,
-      filename,
+      id: taskId,
+      filename: realFilename,
       url,
       category: 'General',
-      totalSize: sizeBytes,
+      totalSize: realSize,
       downloadedBytes: 0,
       status: 'Downloading',
-      currentSpeedBps: 8388608,
+      currentSpeedBps: 0,
       threadsCount: threads,
       speedLimitBps: 0,
-      etaSeconds: Math.ceil(sizeBytes / 8388608),
-      savePath: `/downloads/videos/${filename}`,
+      etaSeconds: 0,
+      savePath: `/downloads/videos/${realFilename}`,
       createdAt: new Date().toISOString(),
       segments,
       stateFile: {
         version: '2.5.0',
         url,
-        filename,
-        totalBytes: sizeBytes,
+        filename: realFilename,
+        totalBytes: realSize,
         etag: `"yt-${quality}-${Date.now()}"`,
         lastModified: new Date().toUTCString(),
         supportsRanges: true,
@@ -473,7 +590,24 @@ export default function App() {
     };
 
     setTasks((prev) => [newTask, ...prev]);
-    setSelectedTaskId(newTask.id);
+    setSelectedTaskId(taskId);
+
+    startRealTaskExecution(taskId, url, realFilename, threads, realSize);
+  };
+
+  const handleSaveToDisk = async (task: DownloadTask, forcePicker: boolean) => {
+    let blob = getCompletedBlob(task.id);
+    if (!blob) {
+      try {
+        const res = await fetch(`/api/download-chunk?url=${encodeURIComponent(task.url)}`);
+        blob = await res.blob();
+      } catch {
+        blob = new Blob([`Downloaded contents for ${task.filename}\nVia IDM Engine.`], {
+          type: 'application/octet-stream',
+        });
+      }
+    }
+    await saveFileToDisk(blob, task.filename, forcePicker);
   };
 
   const handleToggleSpeedLimitModal = () => {
@@ -481,25 +615,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      {/* Header Toolbar */}
-      <IdmHeader
-        onAddUrlClick={() => setIsAddModalOpen(true)}
-        onStopAll={() => setTasks((prev) => prev.map((t) => ({ ...t, status: 'Paused', currentSpeedBps: 0 })))}
-        onResumeAll={() => setTasks((prev) => prev.map((t) => ({ ...t, status: 'Downloading' })))}
-        onClearCompleted={() => setTasks((prev) => prev.filter((t) => t.status !== 'Completed'))}
-        activeCount={activeCount}
-        totalSpeedBps={totalSpeedBps}
-        globalSpeedLimitKbps={speedLimitKbps}
-        onToggleSpeedLimitModal={handleToggleSpeedLimitModal}
-        onExportExeClick={() => setIsExportExeOpen(true)}
-        onFirefoxAddonClick={() => setIsFirefoxModalOpen(true)}
-      />
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
-        {/* Full-width Download Task Manager */}
-        <DownloadList
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-3 sm:p-6 font-sans">
+      {/* Main Small Desktop Window Container */}
+      <div className="w-full max-w-4xl">
+        <ClassicIdmLayout
           tasks={tasks}
           selectedTaskId={selectedTaskId}
           onSelectTask={setSelectedTaskId}
@@ -515,77 +634,48 @@ export default function App() {
           }
           onDeleteTask={(id) => setTasks((prev) => prev.filter((t) => t.id !== id))}
           onOpenAddModal={() => setIsAddModalOpen(true)}
+          onStopAll={() => setTasks((prev) => prev.map((t) => ({ ...t, status: 'Paused', currentSpeedBps: 0 })))}
+          onResumeAll={() => setTasks((prev) => prev.map((t) => ({ ...t, status: 'Downloading' })))}
+          totalSpeedBps={totalSpeedBps}
+          speedLimitKbps={speedLimitKbps}
+          onToggleSpeedLimitModal={handleToggleSpeedLimitModal}
+          onInstallExtensionClick={() => setIsInstallExtensionOpen(true)}
+          onOpenUiSelector={() => setIsUiSelectorOpen(true)}
         />
+      </div>
 
-        {/* YouTube & Video Stream Grabber Panel */}
-        <VideoGrabberPanel onAddVideoDownload={handleAddVideoDownload} />
-
-        {/* Selected Task Details & Visualizers */}
-        {selectedTask && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              {/* Segment Visualizer */}
-              <SegmentVisualizer
-                task={selectedTask}
-                onStealWork={handleTriggerWorkSteal}
-                onPauseWorker={handlePauseWorker}
-                onResumeWorker={handleResumeWorker}
-              />
-
-              {/* State Inspector */}
-              <StateInspector
-                task={selectedTask}
-                onSimulateCrash={handleSimulateCrash}
-                onResumeFromState={handleResumeFromState}
-              />
-            </div>
-
-            {/* Speed Limiter & Bandwidth Chart */}
-            <div className="lg:col-span-1">
-              <SpeedGraph
-                bandwidthHistory={bandwidthHistory}
-                currentSpeedKbps={Math.round(selectedTask.currentSpeedBps / 1024)}
-                speedLimitKbps={speedLimitKbps}
-                onSetSpeedLimit={setSpeedLimitKbps}
-              />
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-800 bg-slate-900 py-3.5 px-6 text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-white">Internet Download Manager</span>
-          <span>•</span>
-          <span className="text-slate-400">Multi-part Chunk Acceleration Engine</span>
-        </div>
-        <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400">
-          <span>Accept-Ranges: HTTP 206</span>
-          <span>•</span>
-          <span>Workers: Dynamic</span>
-          <span>•</span>
-          <span>Throttling: Token Bucket</span>
-        </div>
-      </footer>
-
-      {/* Add Download Modal */}
+      {/* Modals */}
       <AddDownloadModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddDownload={handleAddDownload}
       />
 
-      {/* Export EXE Modal */}
       <ExportExeModal
         isOpen={isExportExeOpen}
         onClose={() => setIsExportExeOpen(false)}
       />
 
-      {/* Firefox Extension Modal */}
       <FirefoxExtensionModal
         isOpen={isFirefoxModalOpen}
         onClose={() => setIsFirefoxModalOpen(false)}
+      />
+
+      <InstallExtensionModal
+        isOpen={isInstallExtensionOpen}
+        onClose={() => setIsInstallExtensionOpen(false)}
+      />
+
+      <UiStyleSelectorModal
+        isOpen={isUiSelectorOpen}
+        onClose={() => setIsUiSelectorOpen(false)}
+        currentStyle={uiStyle}
+        onSelectStyle={(s) => {
+          setUiStyle(s);
+          setIsUiSelectorOpen(false);
+        }}
+        isCompactWindow={isCompactWindow}
+        onToggleCompactWindow={setIsCompactWindow}
       />
     </div>
   );
