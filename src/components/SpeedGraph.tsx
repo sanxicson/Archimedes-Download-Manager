@@ -46,7 +46,7 @@ export const SpeedGraph: React.FC<Props> = ({
               Limiter Status
             </div>
             <div className="text-xs font-mono font-bold text-amber-400">
-              {speedLimitKbps === 0 ? 'Unlimited' : `${(speedLimitKbps / 1024).toFixed(1)} MB/s`}
+              {speedLimitKbps === 0 ? 'Unlimited' : `${(speedLimitKbps / 1024).toFixed(2)} MB/s`}
             </div>
           </div>
         </div>
@@ -60,7 +60,7 @@ export const SpeedGraph: React.FC<Props> = ({
             <span>Global Token Bucket Throttle:</span>
           </div>
           <span className="font-mono text-amber-300 font-bold">
-            {speedLimitKbps === 0 ? 'Unlimited (Max Network Pipe)' : `${speedLimitKbps} KB/s (${(speedLimitKbps / 1024).toFixed(1)} MB/s)`}
+            {speedLimitKbps === 0 ? 'Unlimited (Max Network Pipe)' : `${speedLimitKbps} KB/s (${(speedLimitKbps / 1024).toFixed(2)} MB/s)`}
           </span>
         </div>
 
@@ -123,7 +123,7 @@ export const SpeedGraph: React.FC<Props> = ({
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
             <XAxis dataKey="time" stroke="#64748b" tick={{ fontSize: 10 }} />
-            <YAxis stroke="#64748b" tick={{ fontSize: 10 }} tickFormatter={(val) => `${(val / 1024).toFixed(1)}M`} />
+            <YAxis stroke="#64748b" tick={{ fontSize: 10 }} tickFormatter={(val) => `${(val / 1024).toFixed(2)}M`} />
             <Tooltip
               contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }}
               formatter={(value: any, name: any) => [

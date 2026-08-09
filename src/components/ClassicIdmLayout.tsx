@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DownloadTask } from '../types/idm';
+import { ColorTheme } from '../utils/modalTheme';
 import {
   Download,
   Play,
@@ -28,7 +29,7 @@ import {
 
 interface Props {
   tasks: DownloadTask[];
-  selectedTaskId: string;
+  selectedTaskId: string | null;
   onSelectTask: (id: string) => void;
   onPauseTask: (id: string) => void;
   onResumeTask: (id: string) => void;
@@ -41,6 +42,8 @@ interface Props {
   onToggleSpeedLimitModal: () => void;
   onInstallExtensionClick: () => void;
   onOpenUiSelector: () => void;
+  colorTheme?: ColorTheme;
+  onChangeColorTheme?: (theme: ColorTheme) => void;
 }
 
 export const ClassicIdmLayout: React.FC<Props> = ({
@@ -58,10 +61,22 @@ export const ClassicIdmLayout: React.FC<Props> = ({
   onToggleSpeedLimitModal,
   onInstallExtensionClick,
   onOpenUiSelector,
+  colorTheme: externalColorTheme,
+  onChangeColorTheme,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [openMenu, setOpenMenu] = useState<'tasks' | 'file' | 'downloads' | 'options' | 'extension' | null>(null);
+  const [openMenu, setOpenMenu] = useState<'tasks' | 'file' | 'downloads' | 'options' | 'extension' | 'themes' | null>(null);
+  const [internalColorTheme, setInternalColorTheme] = useState<ColorTheme>('light');
+
+  const colorTheme = externalColorTheme || internalColorTheme;
+  const setColorTheme = (theme: ColorTheme) => {
+    if (onChangeColorTheme) {
+      onChangeColorTheme(theme);
+    } else {
+      setInternalColorTheme(theme);
+    }
+  };
 
   const categories = [
     { name: 'All Downloads', icon: Folder, key: 'All' },
@@ -76,9 +91,34 @@ export const ClassicIdmLayout: React.FC<Props> = ({
 
   const filteredTasks = tasks.filter((t) => {
     let matchesCategory = true;
-    if (selectedCategory === 'Unfinished') matchesCategory = t.status === 'Downloading' || t.status === 'Paused';
-    else if (selectedCategory === 'Finished') matchesCategory = t.status === 'Completed';
-    else if (selectedCategory === 'Video') matchesCategory = t.filename.endsWith('.mp4') || t.category === 'Video';
+    const cat = selectedCategory;
+    const filename = t.filename.toLowerCase();
+
+    if (cat === 'Unfinished') {
+      matchesCategory = t.status === 'Downloading' || t.status === 'Paused';
+    } else if (cat === 'Finished') {
+      matchesCategory = t.status === 'Completed';
+    } else if (cat === 'Compressed') {
+      matchesCategory =
+        t.category === 'Compressed' ||
+        /\.(zip|rar|7z|tar|gz|bz2|iso|cab|arj|xz|z)$/i.test(filename);
+    } else if (cat === 'Documents') {
+      matchesCategory =
+        t.category === 'Documents' ||
+        /\.(pdf|doc|docx|txt|xls|xlsx|ppt|pptx|odt|rtf|epub|csv|log)$/i.test(filename);
+    } else if (cat === 'Music') {
+      matchesCategory =
+        t.category === 'Music' ||
+        /\.(mp3|wav|flac|aac|ogg|m4a|wma|aiff|alac)$/i.test(filename);
+    } else if (cat === 'Programs') {
+      matchesCategory =
+        t.category === 'Programs' ||
+        /\.(exe|msi|dmg|pkg|deb|rpm|apk|appimage|bat|cmd|sh)$/i.test(filename);
+    } else if (cat === 'Video') {
+      matchesCategory =
+        t.category === 'Video' ||
+        /\.(mp4|mkv|avi|mov|wmv|flv|webm|m4v|3gp)$/i.test(filename);
+    }
 
     const matchesSearch =
       t.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -96,10 +136,10 @@ export const ClassicIdmLayout: React.FC<Props> = ({
   };
 
   const formatSpeed = (bps: number) => {
-    if (bps <= 0) return '0 KB/s';
+    if (bps <= 0) return '0.00 KB/s';
     const kbps = bps / 1024;
-    if (kbps > 1024) return `${(kbps / 1024).toFixed(2)} MB/s`;
-    return `${kbps.toFixed(0)} KB/s`;
+    if (kbps >= 1024) return `${(kbps / 1024).toFixed(2)} MB/s`;
+    return `${kbps.toFixed(2)} KB/s`;
   };
 
   const formatEta = (seconds: number) => {
@@ -111,37 +151,129 @@ export const ClassicIdmLayout: React.FC<Props> = ({
   };
 
   const selectedTask = tasks.find((t) => t.id === selectedTaskId);
+  const isTaskSelected = Boolean(selectedTask);
+  const canResume = isTaskSelected && (selectedTask?.status === 'Paused' || selectedTask?.status === 'Error');
+  const canPause = isTaskSelected && selectedTask?.status === 'Downloading';
+  const canDelete = isTaskSelected;
+
+  // Dynamic Theme Styling
+  const themeClasses = {
+    slate: {
+      wrapper: "bg-slate-900 border-slate-700/80 text-slate-100",
+      titlebar: "bg-slate-950 border-slate-800 text-slate-300",
+      menubar: "bg-slate-900 border-slate-800 text-slate-300",
+      toolbar: "bg-slate-900/90 border-slate-800",
+      sidebar: "bg-slate-950/70 border-slate-800 text-slate-400",
+      sidebarActive: "bg-indigo-600/30 text-white border border-indigo-500/40 font-bold",
+      sidebarInactive: "text-slate-300 hover:text-white hover:bg-slate-800/50",
+      dropdown: "bg-slate-900 text-slate-100 border-slate-700 shadow-2xl",
+      dropdownItem: "hover:bg-indigo-600/30 hover:text-white",
+      tableHeader: "bg-slate-950/90 border-slate-800 text-slate-400",
+      tableRow: "hover:bg-slate-800/60 border-slate-800/60",
+      tableSelected: "bg-indigo-950/80 border-indigo-500/50 text-white",
+      statusbar: "bg-slate-950 border-slate-800 text-slate-400",
+      input: "bg-slate-950 border-slate-800 text-slate-200 placeholder-slate-500",
+      badge: "bg-slate-800 text-slate-400 border border-slate-700/50",
+      button: "bg-slate-800/80 hover:bg-indigo-600/30 hover:border-indigo-500/50 border-slate-700/60 text-slate-200",
+      titleBtn: "bg-indigo-600/30 hover:bg-indigo-600/50 border-indigo-500/40 text-indigo-300",
+    },
+    light: {
+      wrapper: "bg-slate-100 border-slate-300 text-slate-800 shadow-2xl ring-1 ring-slate-300",
+      titlebar: "bg-slate-200 border-slate-300 text-slate-800 font-semibold",
+      menubar: "bg-slate-100 border-slate-300 text-slate-700 font-medium",
+      toolbar: "bg-slate-50 border-slate-300",
+      sidebar: "bg-white border-slate-300 text-slate-600",
+      sidebarActive: "bg-indigo-600 text-white border border-indigo-700 font-bold shadow-sm",
+      sidebarInactive: "text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium",
+      dropdown: "bg-white text-slate-800 border-slate-300 shadow-2xl",
+      dropdownItem: "hover:bg-indigo-50 hover:text-indigo-900 font-medium",
+      tableHeader: "bg-slate-200 border-slate-300 text-slate-700 font-bold",
+      tableRow: "hover:bg-slate-200/80 border-slate-200 text-slate-800",
+      tableSelected: "bg-indigo-100 border-indigo-400 text-indigo-950 font-semibold",
+      statusbar: "bg-slate-200 border-slate-300 text-slate-600",
+      input: "bg-white border-slate-300 text-slate-800 placeholder-slate-400",
+      badge: "bg-slate-300 text-slate-700 border border-slate-400/50",
+      button: "bg-white hover:bg-indigo-50 hover:border-indigo-400 border-slate-300 text-slate-800 shadow-sm",
+      titleBtn: "bg-indigo-600 hover:bg-indigo-700 border-indigo-600 text-white shadow-sm",
+    },
+    amoled: {
+      wrapper: "bg-black border-zinc-800 text-zinc-100 shadow-2xl",
+      titlebar: "bg-zinc-950 border-zinc-900 text-zinc-300",
+      menubar: "bg-black border-zinc-900 text-zinc-300",
+      toolbar: "bg-black border-zinc-900",
+      sidebar: "bg-zinc-950 border-zinc-900 text-zinc-400",
+      sidebarActive: "bg-zinc-800 text-white border border-zinc-600 font-bold",
+      sidebarInactive: "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900",
+      dropdown: "bg-black text-zinc-100 border-zinc-800 shadow-2xl",
+      dropdownItem: "hover:bg-zinc-900 hover:text-white",
+      tableHeader: "bg-zinc-950 border-zinc-900 text-zinc-400",
+      tableRow: "hover:bg-zinc-900/80 border-zinc-900 text-zinc-200",
+      tableSelected: "bg-zinc-900 border-zinc-700 text-white font-semibold",
+      statusbar: "bg-zinc-950 border-zinc-900 text-zinc-400",
+      input: "bg-zinc-950 border-zinc-800 text-zinc-200 placeholder-zinc-500",
+      badge: "bg-zinc-900 text-zinc-400 border border-zinc-800",
+      button: "bg-zinc-900 hover:bg-zinc-800 hover:border-zinc-700 border-zinc-800 text-zinc-200",
+      titleBtn: "bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-200",
+    },
+    retro: {
+      wrapper: "bg-slate-300 border-2 border-slate-400 text-slate-900 shadow-2xl font-sans",
+      titlebar: "bg-gradient-to-r from-blue-900 to-indigo-900 border-b border-slate-400 text-white font-bold",
+      menubar: "bg-slate-200 border-b border-slate-400 text-slate-900 font-bold",
+      toolbar: "bg-slate-200 border-b-2 border-slate-400 p-1.5",
+      sidebar: "bg-slate-100 border-r-2 border-slate-400 text-slate-800 font-medium",
+      sidebarActive: "bg-blue-800 text-white border border-blue-900 font-bold",
+      sidebarInactive: "text-slate-900 hover:bg-slate-200 font-bold",
+      dropdown: "bg-slate-200 text-slate-900 border-2 border-slate-400 shadow-2xl font-bold",
+      dropdownItem: "hover:bg-blue-800 hover:text-white",
+      tableHeader: "bg-slate-300 border-b-2 border-slate-400 text-slate-900 font-bold",
+      tableRow: "hover:bg-blue-100 border-slate-300 text-slate-900",
+      tableSelected: "bg-blue-800 text-white font-semibold",
+      statusbar: "bg-slate-300 border-t-2 border-slate-400 text-slate-800",
+      input: "bg-white border-slate-400 text-slate-900 placeholder-slate-500",
+      badge: "bg-blue-950 text-blue-200 border border-blue-800",
+      button: "bg-slate-200 hover:bg-slate-100 border-2 border-slate-400 text-slate-900 active:translate-y-0.5",
+      titleBtn: "bg-blue-800 hover:bg-blue-700 border border-slate-400 text-white",
+    },
+    cyber: {
+      wrapper: "bg-zinc-950 border border-purple-500/50 text-purple-100 shadow-purple-900/30 shadow-2xl",
+      titlebar: "bg-purple-950/80 border-purple-800 text-purple-200",
+      menubar: "bg-zinc-900 border-purple-900 text-purple-300",
+      toolbar: "bg-zinc-950 border-purple-900/60",
+      sidebar: "bg-zinc-900/80 border-purple-900/50 text-purple-300",
+      sidebarActive: "bg-purple-800 text-white border border-purple-500 font-bold shadow-purple-900/50",
+      sidebarInactive: "text-purple-300 hover:text-purple-100 hover:bg-purple-950/60",
+      dropdown: "bg-zinc-950 text-purple-100 border-purple-800 shadow-purple-900/40 shadow-2xl",
+      dropdownItem: "hover:bg-purple-900/60 hover:text-white",
+      tableHeader: "bg-purple-950/60 border-purple-800 text-purple-300",
+      tableRow: "hover:bg-purple-900/40 border-purple-900/30 text-purple-100",
+      tableSelected: "bg-purple-800/60 border-purple-400 text-white font-bold",
+      statusbar: "bg-purple-950 border-purple-900 text-purple-300",
+      input: "bg-zinc-950 border-purple-900 text-purple-200 placeholder-purple-500",
+      badge: "bg-purple-900 text-purple-300 border border-purple-700",
+      button: "bg-purple-950/80 hover:bg-purple-900/80 border-purple-800 text-purple-200",
+      titleBtn: "bg-purple-800 hover:bg-purple-700 border-purple-600 text-purple-100",
+    }
+  }[colorTheme];
 
   return (
-    <div className="bg-slate-900 border border-slate-700/80 rounded-xl overflow-hidden shadow-2xl text-slate-100 flex flex-col font-sans">
+    <div className={`rounded-xl overflow-hidden shadow-2xl flex flex-col font-sans transition-colors ${themeClasses.wrapper}`}>
       {/* --- IDM CLASSIC TITLE BAR --- */}
-      <div className="bg-slate-950 border-b border-slate-800 px-3 py-2 flex items-center justify-between text-xs select-none">
+      <div className={`px-3 py-2 flex items-center justify-between text-xs select-none border-b ${themeClasses.titlebar}`}>
         <div className="flex items-center gap-2">
           <div className="p-1 bg-gradient-to-tr from-sky-500 to-indigo-600 rounded text-white shadow-sm">
             <Download className="w-3.5 h-3.5" />
           </div>
-          <span className="font-extrabold text-white tracking-wide">
-            Internet Download Manager 6.42 Pro
-          </span>
-          <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded font-mono">
-            v2.5 Engine
+          <span className="font-extrabold tracking-wide">
+            Archimedes Download Manager 0.62
           </span>
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={onOpenUiSelector}
-            className="px-2.5 py-0.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 font-bold rounded text-[11px] flex items-center gap-1 transition-all"
-          >
-            <Sparkles className="w-3 h-3 text-indigo-400" />
-            <span>UI Options</span>
-          </button>
-
-          <div className="flex items-center gap-1 border-l border-slate-800 pl-2">
-            <button className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded">
+          <div className="flex items-center gap-1">
+            <button className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/50 rounded">
               <Minimize2 className="w-3 h-3" />
             </button>
-            <button className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded">
+            <button className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/50 rounded">
               <Maximize2 className="w-3 h-3" />
             </button>
             <button className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-rose-400 hover:bg-rose-950/50 rounded">
@@ -152,35 +284,37 @@ export const ClassicIdmLayout: React.FC<Props> = ({
       </div>
 
       {/* --- IDM CLASSIC MENU BAR WITH WORKING DROPDOWNS --- */}
-      <div className="bg-slate-900 border-b border-slate-800 px-3 py-1 flex items-center gap-2 text-xs font-medium text-slate-300 select-none relative z-30">
+      <div className={`px-3 py-1 flex items-center gap-1.5 text-xs font-medium select-none relative z-30 border-b ${themeClasses.menubar}`}>
         {/* Tasks Menu */}
         <div className="relative">
           <button
             onClick={() => setOpenMenu(openMenu === 'tasks' ? null : 'tasks')}
-            className={`px-2 py-1 hover:bg-slate-800 hover:text-white rounded transition-all ${
-              openMenu === 'tasks' ? 'bg-indigo-600/30 text-white font-bold' : ''
+            className={`px-2.5 py-1 hover:bg-slate-500/20 rounded-md transition-all font-semibold flex items-center gap-1.5 ${
+              openMenu === 'tasks' ? 'bg-indigo-600/30 text-indigo-400 font-bold' : ''
             }`}
           >
-            Tasks
+            <Layers className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Tasks</span>
           </button>
           {openMenu === 'tasks' && (
-            <div className="absolute left-0 mt-1 w-48 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-1 z-50 space-y-0.5 text-xs">
+            <div className={`absolute left-0 mt-1 w-48 border rounded-lg p-1 z-50 space-y-0.5 text-xs ${themeClasses.dropdown}`}>
               <button
                 onClick={() => {
                   onOpenAddModal();
                   setOpenMenu(null);
                 }}
-                className="w-full text-left px-3 py-1.5 hover:bg-indigo-600/30 hover:text-white rounded flex items-center gap-2"
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center gap-2 ${themeClasses.dropdownItem}`}
               >
                 <Plus className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Add New Download...</span>
+                <span>Add batch download</span>
               </button>
               <button
                 onClick={() => {
                   onResumeAll();
                   setOpenMenu(null);
                 }}
-                className="w-full text-left px-3 py-1.5 hover:bg-emerald-600/30 hover:text-white rounded flex items-center gap-2"
+                disabled={!tasks.some((t) => t.status === 'Paused')}
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${themeClasses.dropdownItem}`}
               >
                 <Play className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Resume All Tasks</span>
@@ -190,18 +324,19 @@ export const ClassicIdmLayout: React.FC<Props> = ({
                   onStopAll();
                   setOpenMenu(null);
                 }}
-                className="w-full text-left px-3 py-1.5 hover:bg-amber-600/30 hover:text-white rounded flex items-center gap-2"
+                disabled={!tasks.some((t) => t.status === 'Downloading')}
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${themeClasses.dropdownItem}`}
               >
                 <Pause className="w-3.5 h-3.5 text-amber-400" />
                 <span>Stop All Tasks</span>
               </button>
-              {selectedTaskId && (
+              {isTaskSelected && selectedTaskId && (
                 <button
                   onClick={() => {
                     onDeleteTask(selectedTaskId);
                     setOpenMenu(null);
                   }}
-                  className="w-full text-left px-3 py-1.5 hover:bg-rose-600/30 hover:text-rose-300 rounded flex items-center gap-2"
+                  className={`w-full text-left px-3 py-1.5 rounded flex items-center gap-2 ${themeClasses.dropdownItem}`}
                 >
                   <Trash2 className="w-3.5 h-3.5 text-rose-400" />
                   <span>Delete Selected Task</span>
@@ -211,121 +346,116 @@ export const ClassicIdmLayout: React.FC<Props> = ({
           )}
         </div>
 
-        {/* File Menu */}
-        <div className="relative">
-          <button
-            onClick={() => setOpenMenu(openMenu === 'file' ? null : 'file')}
-            className={`px-2 py-1 hover:bg-slate-800 hover:text-white rounded transition-all ${
-              openMenu === 'file' ? 'bg-indigo-600/30 text-white font-bold' : ''
-            }`}
-          >
-            File
-          </button>
-          {openMenu === 'file' && (
-            <div className="absolute left-0 mt-1 w-48 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-1 z-50 space-y-0.5 text-xs">
-              <button
-                onClick={() => {
-                  onOpenAddModal();
-                  setOpenMenu(null);
-                }}
-                className="w-full text-left px-3 py-1.5 hover:bg-indigo-600/30 hover:text-white rounded flex items-center gap-2"
-              >
-                <Plus className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Add URL Batch...</span>
-              </button>
-              <button
-                onClick={() => {
-                  onInstallExtensionClick();
-                  setOpenMenu(null);
-                }}
-                className="w-full text-left px-3 py-1.5 hover:bg-indigo-600/30 hover:text-white rounded flex items-center gap-2"
-              >
-                <Globe className="w-3.5 h-3.5 text-orange-400" />
-                <span>Browser Integration</span>
-              </button>
-            </div>
-          )}
-        </div>
+
 
         {/* Downloads Menu */}
         <div className="relative">
           <button
             onClick={() => setOpenMenu(openMenu === 'downloads' ? null : 'downloads')}
-            className={`px-2 py-1 hover:bg-slate-800 hover:text-white rounded transition-all ${
-              openMenu === 'downloads' ? 'bg-indigo-600/30 text-white font-bold' : ''
+            className={`px-2.5 py-1 hover:bg-slate-500/20 rounded-md transition-all font-semibold flex items-center gap-1.5 ${
+              openMenu === 'downloads' ? 'bg-indigo-600/30 text-indigo-400 font-bold' : ''
             }`}
           >
-            Downloads
+            <Download className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Downloads</span>
           </button>
           {openMenu === 'downloads' && (
-            <div className="absolute left-0 mt-1 w-52 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-1 z-50 space-y-0.5 text-xs">
+            <div className={`absolute left-0 mt-1 w-52 border rounded-lg p-1 z-50 space-y-0.5 text-xs ${themeClasses.dropdown}`}>
               <button
                 onClick={() => {
-                  if (selectedTaskId) onResumeTask(selectedTaskId);
+                  if (canResume && selectedTaskId) onResumeTask(selectedTaskId);
                   setOpenMenu(null);
                 }}
-                disabled={!selectedTaskId}
-                className="w-full text-left px-3 py-1.5 hover:bg-emerald-600/30 hover:text-white rounded flex items-center gap-2 disabled:opacity-40"
+                disabled={!canResume}
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${themeClasses.dropdownItem}`}
               >
-                <Play className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Start / Resume Download</span>
+                <Play className={`w-3.5 h-3.5 ${canResume ? 'text-emerald-400' : 'text-slate-500'}`} />
+                <span className={canResume ? '' : 'text-slate-500'}>Resume Download</span>
               </button>
               <button
                 onClick={() => {
-                  if (selectedTaskId) onPauseTask(selectedTaskId);
+                  if (canPause && selectedTaskId) onPauseTask(selectedTaskId);
                   setOpenMenu(null);
                 }}
-                disabled={!selectedTaskId}
-                className="w-full text-left px-3 py-1.5 hover:bg-amber-600/30 hover:text-white rounded flex items-center gap-2 disabled:opacity-40"
+                disabled={!canPause}
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed ${themeClasses.dropdownItem}`}
               >
-                <Pause className="w-3.5 h-3.5 text-amber-400" />
-                <span>Pause Download</span>
-              </button>
-              <button
-                onClick={() => {
-                  onToggleSpeedLimitModal();
-                  setOpenMenu(null);
-                }}
-                className="w-full text-left px-3 py-1.5 hover:bg-sky-600/30 hover:text-white rounded flex items-center gap-2"
-              >
-                <Sliders className="w-3.5 h-3.5 text-sky-400" />
-                <span>Speed Limiter Config</span>
+                <Pause className={`w-3.5 h-3.5 ${canPause ? 'text-amber-400' : 'text-slate-500'}`} />
+                <span className={canPause ? '' : 'text-slate-500'}>Pause / Stop Download</span>
               </button>
             </div>
           )}
         </div>
 
-        {/* Options Menu */}
+        {/* Options Menu Dropdown */}
         <div className="relative">
           <button
             onClick={() => setOpenMenu(openMenu === 'options' ? null : 'options')}
-            className={`px-2 py-1 hover:bg-slate-800 hover:text-white rounded transition-all ${
-              openMenu === 'options' ? 'bg-indigo-600/30 text-white font-bold' : ''
+            className={`px-2.5 py-1 hover:bg-slate-500/20 rounded-md transition-all font-semibold flex items-center gap-1.5 ${
+              openMenu === 'options' ? 'bg-indigo-600/30 text-indigo-400 font-bold' : ''
             }`}
           >
-            Options
+            <Sliders className="w-3.5 h-3.5 text-amber-400" />
+            <span>Options</span>
           </button>
           {openMenu === 'options' && (
-            <div className="absolute left-0 mt-1 w-52 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl p-1 z-50 space-y-0.5 text-xs">
+            <div className={`absolute left-0 mt-1 w-56 border rounded-lg p-1 z-50 space-y-0.5 text-xs ${themeClasses.dropdown}`}>
               <button
                 onClick={() => {
                   onToggleSpeedLimitModal();
                   setOpenMenu(null);
                 }}
-                className="w-full text-left px-3 py-1.5 hover:bg-sky-600/30 hover:text-white rounded flex items-center gap-2"
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center gap-2 ${themeClasses.dropdownItem}`}
               >
                 <Sliders className="w-3.5 h-3.5 text-sky-400" />
-                <span>Speed Limiter & Connection</span>
+                <span>Archimedes Options (v0.62)...</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Themes Direct Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setOpenMenu(openMenu === 'themes' ? null : 'themes')}
+            className={`px-2.5 py-1 hover:bg-slate-500/20 rounded-md transition-all font-semibold text-purple-400 flex items-center gap-1.5 ${
+              openMenu === 'themes' ? 'bg-indigo-600/30 text-indigo-400 font-bold' : ''
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <span>Themes</span>
+          </button>
+          {openMenu === 'themes' && (
+            <div className={`absolute left-0 mt-1 w-52 border rounded-lg p-1 z-50 space-y-0.5 text-xs ${themeClasses.dropdown}`}>
+              <button
+                onClick={() => { setColorTheme('slate'); setOpenMenu(null); }}
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center justify-between ${themeClasses.dropdownItem} ${colorTheme === 'slate' ? 'font-bold underline' : ''}`}
+              >
+                <span>🌙 Classic Slate Dark</span>
               </button>
               <button
-                onClick={() => {
-                  onOpenUiSelector();
-                  setOpenMenu(null);
-                }}
-                className="w-full text-left px-3 py-1.5 hover:bg-indigo-600/30 hover:text-white rounded flex items-center gap-2"
+                onClick={() => { setColorTheme('light'); setOpenMenu(null); }}
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center justify-between ${themeClasses.dropdownItem} ${colorTheme === 'light' ? 'font-bold underline' : ''}`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                <span>UI Themes & Options</span>
+                <span>☀️ Win 11 Light Silver</span>
+              </button>
+              <button
+                onClick={() => { setColorTheme('amoled'); setOpenMenu(null); }}
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center justify-between ${themeClasses.dropdownItem} ${colorTheme === 'amoled' ? 'font-bold underline' : ''}`}
+              >
+                <span>🖤 AMOLED Pitch Black</span>
+              </button>
+              <button
+                onClick={() => { setColorTheme('retro'); setOpenMenu(null); }}
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center justify-between ${themeClasses.dropdownItem} ${colorTheme === 'retro' ? 'font-bold underline' : ''}`}
+              >
+                <span>👾 Retro Windows 98</span>
+              </button>
+              <button
+                onClick={() => { setColorTheme('cyber'); setOpenMenu(null); }}
+                className={`w-full text-left px-3 py-1.5 rounded flex items-center justify-between ${themeClasses.dropdownItem} ${colorTheme === 'cyber' ? 'font-bold underline' : ''}`}
+              >
+                <span>⚡ Cyberpunk Neon</span>
               </button>
             </div>
           )}
@@ -338,76 +468,98 @@ export const ClassicIdmLayout: React.FC<Props> = ({
               onInstallExtensionClick();
               setOpenMenu(null);
             }}
-            className="px-2 py-1 hover:bg-slate-800 hover:text-white rounded transition-all text-orange-400 font-bold flex items-center gap-1"
+            className="px-2.5 py-1 hover:bg-slate-500/20 rounded-md transition-all font-semibold text-orange-400 flex items-center gap-1.5"
           >
-            <Globe className="w-3 h-3 text-orange-400" />
+            <Globe className="w-3.5 h-3.5 text-orange-400" />
             <span>Extension</span>
           </button>
         </div>
       </div>
 
       {/* --- IDM CLASSIC ICON TOOLBAR --- */}
-      <div className="bg-slate-900/90 border-b border-slate-800 p-2 flex items-center gap-1.5 overflow-x-auto">
+      <div className={`p-2 flex items-center gap-1.5 overflow-x-auto border-b ${themeClasses.toolbar}`}>
         <button
           onClick={onOpenAddModal}
-          className="flex flex-col items-center justify-center px-3 py-1.5 bg-slate-800/80 hover:bg-indigo-600/30 hover:border-indigo-500/50 border border-slate-700/60 rounded-lg text-slate-200 transition-all group shrink-0"
+          className={`flex flex-col items-center justify-center px-3 py-1.5 border rounded-lg transition-all group shrink-0 ${themeClasses.button}`}
+          title="Add new download URL"
         >
-          <Plus className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
+          <Plus className="w-4 h-4 text-indigo-500 group-hover:scale-110 transition-transform" />
           <span className="text-[10px] font-semibold mt-0.5">Add URL</span>
         </button>
 
         <button
-          onClick={onResumeAll}
-          className="flex flex-col items-center justify-center px-3 py-1.5 bg-slate-800/80 hover:bg-emerald-600/30 hover:border-emerald-500/50 border border-slate-700/60 rounded-lg text-slate-200 transition-all group shrink-0"
+          onClick={() => {
+            if (canResume && selectedTaskId) {
+              onResumeTask(selectedTaskId);
+            }
+          }}
+          disabled={!canResume}
+          className={`flex flex-col items-center justify-center px-3 py-1.5 border rounded-lg transition-all group shrink-0 ${
+            canResume
+              ? themeClasses.button
+              : 'bg-slate-800/10 border-slate-700/20 text-slate-500 opacity-30 grayscale cursor-not-allowed pointer-events-none'
+          }`}
+          title={
+            !isTaskSelected
+              ? 'No file selected'
+              : canResume
+              ? 'Resume selected download'
+              : 'Selected file is not paused'
+          }
         >
-          <Play className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-semibold mt-0.5">Resume</span>
+          <Play className={`w-4 h-4 transition-transform ${canResume ? 'text-emerald-500 group-hover:scale-110' : 'text-slate-500'}`} />
+          <span className={`text-[10px] font-semibold mt-0.5 ${canResume ? '' : 'text-slate-500'}`}>Resume</span>
         </button>
 
         <button
-          onClick={onStopAll}
-          className="flex flex-col items-center justify-center px-3 py-1.5 bg-slate-800/80 hover:bg-amber-600/30 hover:border-amber-500/50 border border-slate-700/60 rounded-lg text-slate-200 transition-all group shrink-0"
+          onClick={() => {
+            if (canPause && selectedTaskId) {
+              onPauseTask(selectedTaskId);
+            }
+          }}
+          disabled={!canPause}
+          className={`flex flex-col items-center justify-center px-3 py-1.5 border rounded-lg transition-all group shrink-0 ${
+            canPause
+              ? themeClasses.button
+              : 'bg-slate-800/10 border-slate-700/20 text-slate-500 opacity-30 grayscale cursor-not-allowed pointer-events-none'
+          }`}
+          title={
+            !isTaskSelected
+              ? 'No file selected'
+              : canPause
+              ? 'Pause / Stop selected download'
+              : 'Selected file is not downloading'
+          }
         >
-          <Pause className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-semibold mt-0.5">Stop</span>
+          <Pause className={`w-4 h-4 transition-transform ${canPause ? 'text-amber-500 group-hover:scale-110' : 'text-slate-500'}`} />
+          <span className={`text-[10px] font-semibold mt-0.5 ${canPause ? '' : 'text-slate-500'}`}>Pause/Stop</span>
         </button>
 
         <button
-          onClick={() => selectedTaskId && onDeleteTask(selectedTaskId)}
-          disabled={!selectedTaskId}
-          className="flex flex-col items-center justify-center px-3 py-1.5 bg-slate-800/80 hover:bg-rose-600/30 hover:border-rose-500/50 border border-slate-700/60 rounded-lg text-slate-200 transition-all group disabled:opacity-40 shrink-0"
+          onClick={() => canDelete && selectedTaskId && onDeleteTask(selectedTaskId)}
+          disabled={!canDelete}
+          className={`flex flex-col items-center justify-center px-3 py-1.5 border rounded-lg transition-all group shrink-0 ${
+            canDelete
+              ? themeClasses.button
+              : 'bg-slate-800/10 border-slate-700/20 text-slate-500 opacity-30 grayscale cursor-not-allowed pointer-events-none'
+          }`}
+          title={canDelete ? 'Delete selected download' : 'Select a download to delete'}
         >
-          <Trash2 className="w-4 h-4 text-rose-400 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-semibold mt-0.5">Delete</span>
+          <Trash2 className={`w-4 h-4 transition-transform ${canDelete ? 'text-rose-500 group-hover:scale-110' : 'text-slate-500'}`} />
+          <span className={`text-[10px] font-semibold mt-0.5 ${canDelete ? '' : 'text-slate-500'}`}>Delete</span>
         </button>
 
-        <div className="h-8 w-[1px] bg-slate-800 mx-1" />
 
-        <button
-          onClick={onToggleSpeedLimitModal}
-          className="flex flex-col items-center justify-center px-3 py-1.5 bg-slate-800/80 hover:bg-sky-600/30 hover:border-sky-500/50 border border-slate-700/60 rounded-lg text-slate-200 transition-all group shrink-0"
-        >
-          <Sliders className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-semibold mt-0.5">Options</span>
-        </button>
-
-        <button
-          onClick={onInstallExtensionClick}
-          className="flex flex-col items-center justify-center px-3 py-1.5 bg-slate-800/80 hover:bg-orange-600/30 hover:border-orange-500/50 border border-slate-700/60 rounded-lg text-slate-200 transition-all group shrink-0"
-        >
-          <Globe className="w-4 h-4 text-orange-400 group-hover:scale-110 transition-transform" />
-          <span className="text-[10px] font-semibold mt-0.5">Extension</span>
-        </button>
 
         {/* Right Search Input */}
         <div className="ml-auto relative w-44 sm:w-56">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Search tasks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-7 pr-2 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className={`w-full rounded-lg pl-7 pr-2 py-1 text-xs focus:outline-none focus:border-indigo-500 border ${themeClasses.input}`}
           />
         </div>
       </div>
@@ -415,8 +567,8 @@ export const ClassicIdmLayout: React.FC<Props> = ({
       {/* --- MAIN SPLIT WORKSPACE --- */}
       <div className="grid grid-cols-1 md:grid-cols-5 min-h-[360px]">
         {/* Left Categories Tree Sidebar */}
-        <div className="md:col-span-1 bg-slate-950/70 border-r border-slate-800 p-2.5 space-y-1 text-xs">
-          <div className="px-2 py-1 text-[10px] uppercase font-mono font-bold text-slate-500 tracking-wider">
+        <div className={`md:col-span-1 p-2.5 space-y-1 text-xs border-r ${themeClasses.sidebar}`}>
+          <div className="px-2 py-1 text-[10px] uppercase font-mono font-bold opacity-60 tracking-wider">
             Categories
           </div>
 
@@ -429,12 +581,12 @@ export const ClassicIdmLayout: React.FC<Props> = ({
                 onClick={() => setSelectedCategory(cat.key)}
                 className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-all ${
                   isSelected
-                    ? 'bg-indigo-600/30 text-white border border-indigo-500/40 font-bold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    ? themeClasses.sidebarActive
+                    : themeClasses.sidebarInactive
                 }`}
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <IconComponent className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-indigo-400' : 'text-slate-500'}`} />
+                  <IconComponent className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'opacity-100' : 'opacity-70'}`} />
                   <span className="truncate">{cat.name}</span>
                 </div>
               </button>
@@ -443,10 +595,10 @@ export const ClassicIdmLayout: React.FC<Props> = ({
         </div>
 
         {/* Right Main Downloads Grid Table */}
-        <div className="md:col-span-4 bg-slate-900 overflow-x-auto">
+        <div className="md:col-span-4 overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-950/90 border-b border-slate-800 text-[11px] font-semibold text-slate-400 select-none">
+              <tr className={`text-[11px] font-semibold select-none border-b ${themeClasses.tableHeader}`}>
                 <th className="py-2 px-3">File Name</th>
                 <th className="py-2 px-2 text-center">Q</th>
                 <th className="py-2 px-3">Size</th>
@@ -456,26 +608,28 @@ export const ClassicIdmLayout: React.FC<Props> = ({
                 <th className="py-2 px-3">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
+            <tbody className="divide-y divide-slate-700/20 font-mono">
               {filteredTasks.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-500 text-xs">
+                  <td colSpan={7} className="py-12 text-center opacity-50 text-xs">
                     No download tasks in this category
                   </td>
                 </tr>
               ) : (
                 filteredTasks.map((task) => {
                   const isSelected = task.id === selectedTaskId;
-                  const percent = Math.min(100, Math.round((task.downloadedBytes / task.totalSize) * 100));
+                  const percentRaw = task.totalSize > 0 ? (task.downloadedBytes / task.totalSize) * 100 : 0;
+                  const percent = Math.min(100, percentRaw);
+                  const percentFormatted = Math.min(100, percentRaw).toFixed(2);
 
                   return (
                     <tr
                       key={task.id}
                       onClick={() => onSelectTask(task.id)}
-                      className={`cursor-pointer transition-colors ${
+                      className={`cursor-pointer transition-colors border-b ${
                         isSelected
-                          ? 'bg-indigo-950/60 border-indigo-500/50 text-white font-medium'
-                          : 'hover:bg-slate-950/50 text-slate-300'
+                          ? themeClasses.tableSelected
+                          : themeClasses.tableRow
                       }`}
                     >
                       {/* File Name */}
@@ -487,12 +641,12 @@ export const ClassicIdmLayout: React.FC<Props> = ({
                       </td>
 
                       {/* Q / Threads */}
-                      <td className="py-2.5 px-2 text-center font-mono text-[10px] text-slate-400">
+                      <td className="py-2.5 px-2 text-center font-mono text-[10px] opacity-70">
                         {task.threadsCount}T
                       </td>
 
                       {/* Size */}
-                      <td className="py-2.5 px-3 whitespace-nowrap text-slate-300">
+                      <td className="py-2.5 px-3 whitespace-nowrap">
                         {formatBytes(task.totalSize)}
                       </td>
 
@@ -511,9 +665,9 @@ export const ClassicIdmLayout: React.FC<Props> = ({
                             >
                               {task.status}
                             </span>
-                            <span className="text-slate-400">{percent}%</span>
+                            <span className="opacity-70">{percentFormatted}%</span>
                           </div>
-                          <div className="w-full h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                          <div className="w-full h-1.5 bg-slate-950/60 rounded-full overflow-hidden border border-slate-700/50">
                             <div
                               className={`h-full transition-all duration-300 ${
                                 task.status === 'Completed'
@@ -529,7 +683,7 @@ export const ClassicIdmLayout: React.FC<Props> = ({
                       </td>
 
                       {/* Time Left */}
-                      <td className="py-2.5 px-3 whitespace-nowrap text-slate-400">
+                      <td className="py-2.5 px-3 whitespace-nowrap opacity-70">
                         {task.status === 'Completed' ? 'Finished' : formatEta(task.etaSeconds)}
                       </td>
 
@@ -584,9 +738,9 @@ export const ClassicIdmLayout: React.FC<Props> = ({
       </div>
 
       {/* --- IDM BOTTOM STATUS BAR --- */}
-      <div className="bg-slate-950 border-t border-slate-800 px-3 py-1.5 flex items-center justify-between text-[11px] text-slate-400 select-none">
+      <div className={`px-3 py-1.5 flex items-center justify-between text-[11px] select-none border-t ${themeClasses.statusbar}`}>
         <div className="flex items-center gap-4">
-          <span>Active Tasks: <strong className="text-white font-mono">{tasks.filter((t) => t.status === 'Downloading').length}</strong></span>
+          <span>Active Tasks: <strong className="font-mono">{tasks.filter((t) => t.status === 'Downloading').length}</strong></span>
           <span>Speed Limit: <strong className="text-indigo-400 font-mono">{speedLimitKbps === 0 ? 'Off' : `${speedLimitKbps} KB/s`}</strong></span>
         </div>
 

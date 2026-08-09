@@ -167,7 +167,9 @@ export const DownloadList: React.FC<Props> = ({
         ) : (
           filteredTasks.map((task) => {
             const isSelected = task.id === selectedTaskId;
-            const percent = Math.min(100, Math.round((task.downloadedBytes / task.totalSize) * 100));
+            const percentRaw = task.totalSize > 0 ? (task.downloadedBytes / task.totalSize) * 100 : 0;
+            const percent = Math.min(100, percentRaw);
+            const percentFormatted = Math.min(100, percentRaw).toFixed(2);
 
             return (
               <div
@@ -286,7 +288,7 @@ export const DownloadList: React.FC<Props> = ({
                   <div className="flex flex-wrap justify-between items-center text-xs font-mono text-slate-400">
                     <div className="flex items-center gap-3">
                       <span className="text-slate-200 font-bold">
-                        {formatBytes(task.downloadedBytes)} / {formatBytes(task.totalSize)} ({percent}%)
+                        {formatBytes(task.downloadedBytes)} / {formatBytes(task.totalSize)} ({percentFormatted}%)
                       </span>
                       {isSelected && (
                         <span className="text-[10px] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded font-sans font-medium">
@@ -299,7 +301,9 @@ export const DownloadList: React.FC<Props> = ({
                       {task.status === 'Downloading' && (
                         <span className="text-emerald-400 font-bold flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                          {(task.currentSpeedBps / 1024).toFixed(0)} KB/s
+                          {task.currentSpeedBps / (1024 * 1024) >= 1
+                            ? `${(task.currentSpeedBps / (1024 * 1024)).toFixed(2)} MB/s`
+                            : `${(task.currentSpeedBps / 1024).toFixed(2)} KB/s`}
                         </span>
                       )}
                       <span>ETA: {formatEta(task.etaSeconds)}</span>

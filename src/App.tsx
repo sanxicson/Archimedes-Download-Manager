@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DownloadTask, DownloadSegment, BandwidthPoint, IdmStateFile } from './types/idm';
+import { ColorTheme } from './utils/modalTheme';
 import { IdmHeader } from './components/IdmHeader';
 import { DownloadList } from './components/DownloadList';
 import { SegmentVisualizer } from './components/SegmentVisualizer';
@@ -11,6 +12,7 @@ import { ExportExeModal } from './components/ExportExeModal';
 import { FirefoxExtensionModal } from './components/FirefoxExtensionModal';
 import { InstallExtensionModal } from './components/InstallExtensionModal';
 import { ClassicIdmLayout } from './components/ClassicIdmLayout';
+import { IdmOptionsModal } from './components/IdmOptionsModal';
 import { UiStyleSelectorModal, UiStyleOption } from './components/UiStyleSelectorModal';
 import { Sparkles, Monitor, Layout } from 'lucide-react';
 import {
@@ -32,148 +34,28 @@ export default function App() {
   const [isExportExeOpen, setIsExportExeOpen] = useState(false);
   const [isFirefoxModalOpen, setIsFirefoxModalOpen] = useState(false);
   const [isInstallExtensionOpen, setIsInstallExtensionOpen] = useState(false);
+  const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
   const [isUiSelectorOpen, setIsUiSelectorOpen] = useState(false);
   const [uiStyle, setUiStyle] = useState<UiStyleOption>('classic');
   const [isCompactWindow, setIsCompactWindow] = useState<boolean>(true);
   const [speedLimitKbps, setSpeedLimitKbps] = useState(0); // 0 = unlimited
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
+    return (localStorage.getItem('idm_color_theme') as ColorTheme) || 'light';
+  });
 
-  // Initial Downloads
-  const [tasks, setTasks] = useState<DownloadTask[]>([
-    {
-      id: 'task-1',
-      filename: 'ubuntu-24.04-desktop-amd64.iso',
-      url: 'https://releases.ubuntu.com/24.04/ubuntu-24.04-desktop-amd64.iso',
-      category: 'General',
-      totalSize: 6291456000, // ~6 GB
-      downloadedBytes: 2516582400, // ~2.4 GB
-      status: 'Downloading',
-      currentSpeedBps: 8388608, // 8 MB/s
-      threadsCount: 8,
-      speedLimitBps: 0,
-      etaSeconds: 450,
-      savePath: '/downloads/ubuntu-24.04-desktop-amd64.iso',
-      createdAt: new Date().toISOString(),
-      segments: Array.from({ length: 8 }).map((_, i) => {
-        const totalSize = 6291456000;
-        const chunkSize = Math.floor(totalSize / 8);
-        const start = i * chunkSize;
-        const end = i === 7 ? totalSize - 1 : (i + 1) * chunkSize - 1;
-        const current = start + Math.floor((end - start) * 0.4);
-        return {
-          id: i,
-          workerId: i,
-          startByte: start,
-          endByte: end,
-          currentByte: current,
-          status: 'downloading',
-          speedBytesPerSec: 1048576, // 1 MB/s each
-          color: COLOR_PALETTE[i % COLOR_PALETTE.length],
-        };
-      }),
-      stateFile: {
-        version: '2.5.0',
-        url: 'https://releases.ubuntu.com/24.04/ubuntu-24.04-desktop-amd64.iso',
-        filename: 'ubuntu-24.04-desktop-amd64.iso',
-        totalBytes: 6291456000,
-        etag: '"6628b12f-177000000"',
-        lastModified: 'Wed, 24 Apr 2024 12:00:00 GMT',
-        supportsRanges: true,
-        workerCount: 8,
-        speedLimitBps: 0,
-        completedRanges: [],
-        activeSegments: [],
-        lastSavedAt: new Date().toISOString(),
-      },
-    },
-    {
-      id: 'task-2',
-      filename: '4k_demo_60fps.mp4',
-      url: 'https://cdn.example.org/media/4k_video_stream.mp4',
-      category: 'General',
-      totalSize: 1048576000, // ~1 GB
-      downloadedBytes: 1048576000,
-      status: 'Completed',
-      currentSpeedBps: 0,
-      threadsCount: 8,
-      speedLimitBps: 0,
-      etaSeconds: 0,
-      savePath: '/downloads/videos/4k_demo_60fps.mp4',
-      createdAt: new Date().toISOString(),
-      completedAt: new Date().toISOString(),
-      segments: [],
-      stateFile: {
-        version: '2.5.0',
-        url: 'https://cdn.example.org/media/4k_video_stream.mp4',
-        filename: '4k_demo_60fps.mp4',
-        totalBytes: 1048576000,
-        etag: '"59f12a-4k-demo"',
-        lastModified: 'Mon, 12 Feb 2026 18:30:00 GMT',
-        supportsRanges: true,
-        workerCount: 8,
-        speedLimitBps: 0,
-        completedRanges: [[0, 1048575999]],
-        activeSegments: [],
-        lastSavedAt: new Date().toISOString(),
-      },
-    },
-    {
-      id: 'task-3',
-      filename: 'vscode-installer-x64.exe',
-      url: 'https://update.code.visualstudio.com/latest/win32-x64/user',
-      category: 'General',
-      totalSize: 136314880, // ~130 MB
-      downloadedBytes: 41943040, // ~40 MB
-      status: 'Paused',
-      currentSpeedBps: 0,
-      threadsCount: 4,
-      speedLimitBps: 0,
-      etaSeconds: 0,
-      savePath: '/downloads/vscode-installer-x64.exe',
-      createdAt: new Date().toISOString(),
-      segments: Array.from({ length: 4 }).map((_, i) => {
-        const totalSize = 136314880;
-        const chunkSize = Math.floor(totalSize / 4);
-        const start = i * chunkSize;
-        const end = i === 3 ? totalSize - 1 : (i + 1) * chunkSize - 1;
-        return {
-          id: i,
-          workerId: i,
-          startByte: start,
-          endByte: end,
-          currentByte: start + Math.floor((end - start) * 0.3),
-          status: 'idle',
-          speedBytesPerSec: 0,
-          color: COLOR_PALETTE[i % COLOR_PALETTE.length],
-        };
-      }),
-      stateFile: {
-        version: '2.5.0',
-        url: 'https://update.code.visualstudio.com/latest/win32-x64/user',
-        filename: 'vscode-installer-x64.exe',
-        totalBytes: 136314880,
-        etag: '"vscode-latest-etag"',
-        lastModified: 'Thu, 01 Aug 2026 10:00:00 GMT',
-        supportsRanges: true,
-        workerCount: 4,
-        speedLimitBps: 0,
-        completedRanges: [],
-        activeSegments: [],
-        lastSavedAt: new Date().toISOString(),
-      },
-    },
-  ]);
+  useEffect(() => {
+    localStorage.setItem('idm_color_theme', colorTheme);
+  }, [colorTheme]);
 
-  const [selectedTaskId, setSelectedTaskId] = useState<string>('task-1');
+  // Downloads State
+  const [tasks, setTasks] = useState<DownloadTask[]>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // Bandwidth history for chart
-  const [bandwidthHistory, setBandwidthHistory] = useState<BandwidthPoint[]>([
-    { time: '10:25:00', speedKbps: 6144, limitKbps: 0 },
-    { time: '10:25:05', speedKbps: 7168, limitKbps: 0 },
-    { time: '10:25:10', speedKbps: 8192, limitKbps: 0 },
-  ]);
+  const [bandwidthHistory, setBandwidthHistory] = useState<BandwidthPoint[]>([]);
 
   // Selected task reference
-  const selectedTask = tasks.find((t) => t.id === selectedTaskId) || tasks[0];
+  const selectedTask = tasks.find((t) => t.id === selectedTaskId) || tasks[0] || null;
 
   // Calculate global transfer speed
   const totalSpeedBps = tasks.reduce((sum, t) => sum + (t.status === 'Downloading' ? t.currentSpeedBps : 0), 0);
@@ -611,13 +493,21 @@ export default function App() {
   };
 
   const handleToggleSpeedLimitModal = () => {
-    setSpeedLimitKbps((prev) => (prev === 0 ? 2048 : 0));
+    setIsOptionsModalOpen(true);
+  };
+
+  const appBgClasses: Record<ColorTheme, string> = {
+    slate: 'bg-slate-950 text-slate-100',
+    light: 'bg-slate-200 text-slate-900',
+    amoled: 'bg-black text-zinc-100',
+    retro: 'bg-slate-400 text-slate-900',
+    cyber: 'bg-zinc-950 text-purple-100',
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-3 sm:p-6 font-sans">
+    <div className={`min-h-screen ${appBgClasses[colorTheme] || appBgClasses.slate} flex flex-col justify-center items-center p-3 sm:p-6 font-sans transition-colors duration-200`}>
       {/* Main Small Desktop Window Container */}
-      <div className="w-full max-w-4xl">
+      <div className={`w-full ${isCompactWindow ? 'max-w-4xl' : 'max-w-7xl'}`}>
         <ClassicIdmLayout
           tasks={tasks}
           selectedTaskId={selectedTaskId}
@@ -641,6 +531,8 @@ export default function App() {
           onToggleSpeedLimitModal={handleToggleSpeedLimitModal}
           onInstallExtensionClick={() => setIsInstallExtensionOpen(true)}
           onOpenUiSelector={() => setIsUiSelectorOpen(true)}
+          colorTheme={colorTheme}
+          onChangeColorTheme={setColorTheme}
         />
       </div>
 
@@ -649,21 +541,36 @@ export default function App() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAddDownload={handleAddDownload}
+        colorTheme={colorTheme}
       />
 
       <ExportExeModal
         isOpen={isExportExeOpen}
         onClose={() => setIsExportExeOpen(false)}
+        colorTheme={colorTheme}
       />
 
       <FirefoxExtensionModal
         isOpen={isFirefoxModalOpen}
         onClose={() => setIsFirefoxModalOpen(false)}
+        colorTheme={colorTheme}
+        onAddDownload={handleAddDownload}
       />
 
       <InstallExtensionModal
         isOpen={isInstallExtensionOpen}
         onClose={() => setIsInstallExtensionOpen(false)}
+        colorTheme={colorTheme}
+        onAddDownload={handleAddDownload}
+      />
+
+      <IdmOptionsModal
+        isOpen={isOptionsModalOpen}
+        onClose={() => setIsOptionsModalOpen(false)}
+        speedLimitKbps={speedLimitKbps}
+        onUpdateSpeedLimitKbps={setSpeedLimitKbps}
+        colorTheme={colorTheme}
+        onOpenExtensionModal={() => setIsInstallExtensionOpen(true)}
       />
 
       <UiStyleSelectorModal
@@ -676,6 +583,8 @@ export default function App() {
         }}
         isCompactWindow={isCompactWindow}
         onToggleCompactWindow={setIsCompactWindow}
+        colorTheme={colorTheme}
+        onChangeColorTheme={setColorTheme}
       />
     </div>
   );

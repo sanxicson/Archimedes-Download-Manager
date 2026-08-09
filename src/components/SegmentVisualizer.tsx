@@ -62,7 +62,7 @@ export const SegmentVisualizer: React.FC<Props> = ({
         <div className="flex justify-between text-xs text-slate-400 mb-2">
           <span>Overall Disk Byte Allocations (0 B &rarr; {formatBytes(task.totalSize)})</span>
           <span className="font-mono text-indigo-400 font-semibold">
-            {formatBytes(task.downloadedBytes)} / {formatBytes(task.totalSize)} ({Math.round((task.downloadedBytes / task.totalSize) * 100)}%)
+            {formatBytes(task.downloadedBytes)} / {formatBytes(task.totalSize)} ({((task.downloadedBytes / task.totalSize) * 100).toFixed(2)}%)
           </span>
         </div>
 
@@ -76,7 +76,7 @@ export const SegmentVisualizer: React.FC<Props> = ({
                 key={segment.id}
                 style={{ width: `${Math.max(widthPct, 2)}%` }}
                 className="h-full bg-slate-800 rounded relative overflow-hidden group cursor-pointer"
-                title={`Worker #${segment.workerId} | Range: ${segment.startByte}-${segment.endByte} | Progress: ${progress.toFixed(1)}%`}
+                title={`Worker #${segment.workerId} | Range: ${segment.startByte}-${segment.endByte} | Progress: ${progress.toFixed(2)}%`}
               >
                 <div
                   style={{ width: `${progress}%`, backgroundColor: segment.color }}
@@ -155,9 +155,13 @@ export const SegmentVisualizer: React.FC<Props> = ({
                 </div>
 
                 <div className="flex justify-between items-center text-[11px] font-mono text-slate-400">
-                  <span>{progress.toFixed(1)}%</span>
+                  <span>{progress.toFixed(2)}%</span>
                   <span className="text-indigo-300">
-                    {segment.status === 'downloading' ? `${(segment.speedBytesPerSec / 1024).toFixed(0)} KB/s` : '0 KB/s'}
+                    {segment.status === 'downloading'
+                      ? segment.speedBytesPerSec / (1024 * 1024) >= 1
+                        ? `${(segment.speedBytesPerSec / (1024 * 1024)).toFixed(2)} MB/s`
+                        : `${(segment.speedBytesPerSec / 1024).toFixed(2)} KB/s`
+                      : '0.00 KB/s'}
                   </span>
                 </div>
 

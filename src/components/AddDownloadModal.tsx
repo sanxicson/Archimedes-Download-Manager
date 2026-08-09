@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
+import { ColorTheme, getModalThemeClasses } from '../utils/modalTheme';
 import { Download, X, Layers, Gauge, Folder, ShieldCheck, Sparkles, FileCode } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onAddDownload: (url: string, filename: string, threads: number, speedLimitKbps: number, category: any) => void;
+  colorTheme?: ColorTheme;
 }
 
-export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownload }) => {
+export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownload, colorTheme = 'slate' }) => {
   const [url, setUrl] = useState('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
   const [filename, setFilename] = useState('BigBuckBunny_4K_Sample.mp4');
   const [threads, setThreads] = useState(8);
   const [speedLimitKbps, setSpeedLimitKbps] = useState(0); // 0 = unlimited
 
   if (!isOpen) return null;
+
+  const theme = getModalThemeClasses(colorTheme);
 
   const realSampleUrls = [
     {
@@ -51,33 +55,36 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-lg p-6 shadow-2xl text-slate-100 relative animate-in fade-in zoom-in-95">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-2 animate-fadeIn ${theme.backdrop}`}>
+      <div
+        className={`rounded-xl w-[33vw] min-w-[320px] max-w-[95vw] min-h-[240px] max-h-[85vh] p-3.5 shadow-2xl relative flex flex-col justify-between ${theme.window}`}
+        style={{ resize: 'both', overflow: 'auto' }}
+      >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-all"
+          className={`absolute top-3 right-3 z-10 p-1 rounded-lg transition-all ${theme.closeBtn}`}
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
 
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-800">
-          <Download className="w-5 h-5 text-indigo-400" />
-          <h3 className="font-bold text-lg text-white">Add New Download Task</h3>
+        <div className={`flex items-center gap-2 mb-2.5 pb-2 border-b pr-8 ${theme.header}`}>
+          <Download className="w-4 h-4 text-indigo-500 shrink-0" />
+          <h3 className={`font-extrabold text-xs sm:text-sm truncate ${theme.headerTitle}`}>Add New Download Task</h3>
         </div>
 
         {/* Real Test URL Presets */}
-        <div className="mb-4">
-          <label className="block text-slate-400 font-semibold mb-1.5 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Try Real Direct Download URLs:</span>
+        <div className="mb-2.5">
+          <label className={`block font-medium mb-1 text-[10px] uppercase tracking-wider flex items-center gap-1 ${theme.textMuted}`}>
+            <Sparkles className="w-3 h-3 text-indigo-400" />
+            <span>Sample Direct Download URLs:</span>
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1.5">
             {realSampleUrls.map((sample, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => handleSelectSample(sample)}
-                className="text-left px-2.5 py-1.5 bg-slate-950 border border-slate-800 hover:border-indigo-500 hover:bg-indigo-950/30 rounded-lg text-xs font-medium text-slate-300 hover:text-indigo-200 transition-all truncate"
+                className={`text-left px-2 py-1 rounded text-[11px] font-medium transition-all truncate ${theme.card} hover:border-indigo-500`}
               >
                 {sample.name}
               </button>
@@ -85,9 +92,9 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="space-y-2.5 text-xs">
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Target Download URL</label>
+            <label className={`block font-medium mb-0.5 text-[11px] ${theme.textSecondary}`}>Target Download URL</label>
             <input
               type="url"
               required
@@ -97,27 +104,27 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
                 const derived = e.target.value.split('/').pop()?.split('?')[0];
                 if (derived) setFilename(derived);
               }}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-indigo-500"
+              className={`w-full rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none ${theme.input}`}
               placeholder="https://example.com/file.zip"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 font-semibold mb-1">Save Filename</label>
+            <label className={`block font-medium mb-0.5 text-[11px] ${theme.textSecondary}`}>Save Filename</label>
             <input
               type="text"
               required
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-indigo-500"
+              className={`w-full rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none ${theme.input}`}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+              <label className={`block font-medium mb-0.5 text-[11px] flex items-center justify-between ${theme.textSecondary}`}>
                 <span>Parallel Workers</span>
-                <span className="text-indigo-400 font-mono">{threads} Workers</span>
+                <span className="text-indigo-400 font-mono text-[10px]">{threads} Workers</span>
               </label>
               <input
                 type="range"
@@ -125,21 +132,21 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
                 max={32}
                 value={threads}
                 onChange={(e) => setThreads(Number(e.target.value))}
-                className="w-full bg-slate-800 accent-indigo-500 cursor-pointer"
+                className="w-full bg-slate-800 accent-indigo-500 cursor-pointer h-1.5 rounded"
               />
             </div>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1 flex items-center justify-between">
+              <label className={`block font-medium mb-0.5 text-[11px] flex items-center justify-between ${theme.textSecondary}`}>
                 <span>Speed Limit</span>
-                <span className="text-amber-400 font-mono">
+                <span className="text-amber-400 font-mono text-[10px]">
                   {speedLimitKbps === 0 ? 'Unlimited' : `${speedLimitKbps} KB/s`}
                 </span>
               </label>
               <select
                 value={speedLimitKbps}
                 onChange={(e) => setSpeedLimitKbps(Number(e.target.value))}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"
+                className={`w-full rounded-lg px-2 py-1 text-xs focus:outline-none ${theme.input}`}
               >
                 <option value={0}>Unlimited</option>
                 <option value={1024}>1 MB/s</option>
@@ -150,27 +157,32 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
             </div>
           </div>
 
-          <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-lg p-2.5 text-[11px] text-emerald-300 flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-lg p-2 text-[10px] text-emerald-300 flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span>
-              Real File Downloader Engine Active: IDM will fetch real HTTP byte streams, assemble segments, and write the file directly into your local disk / Downloads directory.
+              Real Downloader Engine Active: IDM will fetch HTTP streams and write to local disk.
             </span>
           </div>
 
-          <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+          <div className={`pt-2 border-t flex justify-end gap-2 relative ${theme.footer}`}>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg transition-all"
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${theme.btnSecondary}`}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shadow-lg transition-all"
+              className={`px-4 py-1.5 text-xs font-semibold rounded-lg shadow-md transition-all mr-2 ${theme.btnPrimary}`}
             >
-              Start Real Download
+              Start Download
             </button>
+            <div className="absolute bottom-0 right-0 pointer-events-none text-slate-500 opacity-60">
+              <svg className="w-2.5 h-2.5" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M14 14H12V12H14V14ZM14 10H12V8H14V10ZM10 14H8V12H10V14ZM14 6H12V4H14V6ZM10 10H8V8H10V10ZM6 14H4V12H6V14Z" />
+              </svg>
+            </div>
           </div>
         </form>
       </div>

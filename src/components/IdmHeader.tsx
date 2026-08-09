@@ -33,10 +33,10 @@ export const IdmHeader: React.FC<Props> = ({
   onInstallExtensionClick,
 }) => {
   const formatSpeed = (bps: number) => {
-    if (bps <= 0) return '0 KB/s';
+    if (bps <= 0) return '0.00 KB/s';
     const kbps = bps / 1024;
-    if (kbps > 1024) return `${(kbps / 1024).toFixed(2)} MB/s`;
-    return `${kbps.toFixed(0)} KB/s`;
+    if (kbps >= 1024) return `${(kbps / 1024).toFixed(2)} MB/s`;
+    return `${kbps.toFixed(2)} KB/s`;
   };
 
   return (
@@ -54,10 +54,10 @@ export const IdmHeader: React.FC<Props> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-extrabold text-lg text-white tracking-tight">
-                Internet Download Manager
+                Archimedes Download Manager
               </h1>
               <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                PRO ACTIVE
+                v0.62
               </span>
             </div>
             <p className="text-xs text-slate-400">
@@ -101,7 +101,7 @@ export const IdmHeader: React.FC<Props> = ({
             className="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
           >
             <Play className="w-3.5 h-3.5" />
-            Resume All
+            Resume
           </button>
 
           <button
@@ -109,7 +109,7 @@ export const IdmHeader: React.FC<Props> = ({
             className="px-3 py-2 bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all shrink-0 active:scale-95"
           >
             <Pause className="w-3.5 h-3.5" />
-            Stop All
+            Pause/Stop
           </button>
 
           <button

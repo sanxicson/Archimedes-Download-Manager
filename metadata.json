@@ -1,6 +1,6 @@
 {
-  "name": "Internet Download Manager",
-  "description": "Modern Internet Download Manager featuring dynamic segment multiplexing, multi-part downloading, speed limiting, and real-time download status monitoring.",
+  "name": "Archimedes Download Manager",
+  "description": "Modern Archimedes Download Manager v0.6 featuring multi-browser extension integration, dynamic segment multiplexing, multi-part downloading, speed limiting, and real-time status monitoring.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
