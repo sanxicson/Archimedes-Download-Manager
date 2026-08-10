@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ColorTheme, getModalThemeClasses } from '../utils/modalTheme';
+import { AdmLogo } from './AdmLogo';
 import { X, Monitor, Download, Terminal, CheckCircle2, FileCode, Copy, Sparkles } from 'lucide-react';
 
 interface Props {
@@ -36,9 +37,7 @@ export const ExportExeModal: React.FC<Props> = ({ isOpen, onClose, colorTheme = 
         {/* Modal Header */}
         <div className={`flex items-center justify-between p-3.5 sm:p-4 border-b pr-10 rounded-t-2xl ${theme.header}`}>
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="p-2 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-indigo-500 shrink-0">
-              <Monitor className="w-4 h-4" />
-            </div>
+            <AdmLogo size={28} />
             <div className="min-w-0 flex-1">
               <h3 className={`font-extrabold text-xs sm:text-sm truncate ${theme.headerTitle}`}>Create Windows Executable (.exe)</h3>
               <p className={`text-[11px] leading-tight truncate mt-0.5 ${theme.textMuted}`}>Package Archimedes Download Manager into a native standalone Windows application</p>

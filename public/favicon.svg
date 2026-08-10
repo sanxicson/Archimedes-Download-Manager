@@ -1,0 +1,47 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="admlogo-facet-left-outer" x1="10" y1="105" x2="60" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#084763" />
+      <stop offset="60%" stop-color="#11739b" />
+      <stop offset="100%" stop-color="#1e9ec4" />
+    </linearGradient>
+
+    <linearGradient id="admlogo-facet-right-outer" x1="60" y1="10" x2="110" y2="105" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#188ba3" />
+      <stop offset="50%" stop-color="#106b8e" />
+      <stop offset="100%" stop-color="#084562" />
+    </linearGradient>
+
+    <linearGradient id="admlogo-facet-crossbar" x1="25" y1="62" x2="95" y2="78" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1c8cae" />
+      <stop offset="50%" stop-color="#137295" />
+      <stop offset="100%" stop-color="#0b4e6d" />
+    </linearGradient>
+
+    <linearGradient id="admlogo-facet-inner-top" x1="60" y1="28" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0a3d58" />
+      <stop offset="100%" stop-color="#146d90" />
+    </linearGradient>
+
+    <linearGradient id="admlogo-facet-fold-shadow" x1="70" y1="65" x2="105" y2="105" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#063249" />
+      <stop offset="100%" stop-color="#0d5475" />
+    </linearGradient>
+
+    <filter id="admlogo-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#041a27" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <g filter="url(#admlogo-shadow)">
+    <path d="M 60 10 L 15 102 L 34 102 L 60 48 L 86 102 L 105 102 Z" fill="url(#admlogo-facet-left-outer)" />
+    <path d="M 60 10 L 53 102 L 34 102 L 60 38 L 60 10 Z" fill="#23add4" opacity="0.28" />
+    <path d="M 60 10 L 60 48 L 86 102 L 105 102 Z" fill="url(#admlogo-facet-right-outer)" />
+    <path d="M 60 30 L 41 68 L 79 68 Z" fill="url(#admlogo-facet-inner-top)" />
+    <path d="M 28 72 L 92 72 L 108 102 L 88 102 L 78 86 L 28 86 Z" fill="url(#admlogo-facet-crossbar)" />
+    <path d="M 33 62 L 87 62 L 93 72 L 27 72 Z" fill="#28b7de" opacity="0.85" />
+    <path d="M 72 72 L 108 102 L 92 102 L 66 82 Z" fill="url(#admlogo-facet-fold-shadow)" />
+    <path d="M 60 35 L 47 62 L 73 62 Z" fill="#083850" />
+    <path d="M 60 35 L 73 62 L 60 62 Z" fill="#1ba8cf" opacity="0.4" />
+  </g>
+</svg>

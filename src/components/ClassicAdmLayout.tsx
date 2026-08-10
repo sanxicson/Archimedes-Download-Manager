@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { APP_VERSION_SHORT } from '../version';
+import { AdmLogo } from './AdmLogo';
 import { DownloadTask } from '../types/adm';
 import { ColorTheme } from '../utils/modalTheme';
 import {
@@ -261,9 +262,7 @@ export const ClassicAdmLayout: React.FC<Props> = ({
       {/* --- ADM CLASSIC TITLE BAR --- */}
       <div className={`px-3 py-2 flex items-center justify-between text-xs select-none border-b ${themeClasses.titlebar}`}>
         <div className="flex items-center gap-2">
-          <div className="p-1 bg-gradient-to-tr from-sky-500 to-indigo-600 rounded text-white shadow-sm">
-            <Download className="w-3.5 h-3.5" />
-          </div>
+          <AdmLogo size={20} />
           <span className="font-extrabold tracking-wide">
             Archimedes Download Manager {APP_VERSION_SHORT}
           </span>

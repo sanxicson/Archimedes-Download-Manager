@@ -1,5 +1,6 @@
 import React from 'react';
 import { APP_VERSION_SHORT } from '../version';
+import { AdmLogo } from './AdmLogo';
 import {
   Download,
   Play,
@@ -46,11 +47,7 @@ export const AdmHeader: React.FC<Props> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-sky-500 to-emerald-400 p-0.5 shadow-lg flex items-center justify-center shrink-0">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Download className="w-5 h-5 text-indigo-400 animate-bounce" />
-            </div>
-          </div>
+          <AdmLogo size={40} />
 
           <div>
             <div className="flex items-center gap-2">
