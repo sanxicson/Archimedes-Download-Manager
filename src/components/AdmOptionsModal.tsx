@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { APP_VERSION_SHORT } from '../version';
 import { ColorTheme, getModalThemeClasses } from '../utils/modalTheme';
 import {
   X,
@@ -31,7 +32,7 @@ interface Props {
   onOpenExtensionModal?: () => void;
 }
 
-export const IdmOptionsModal: React.FC<Props> = ({
+export const AdmOptionsModal: React.FC<Props> = ({
   isOpen,
   onClose,
   speedLimitKbps,
@@ -72,7 +73,7 @@ export const IdmOptionsModal: React.FC<Props> = ({
 
   // Save To Settings
   const [defaultDir, setDefaultDir] = useState('/downloads/');
-  const [tempDir, setTempDir] = useState('/downloads/.idm_temp/');
+  const [tempDir, setTempDir] = useState('/downloads/.adm_temp/');
   const [autoCategorize, setAutoCategorize] = useState(true);
   const [categoryDirs, setCategoryDirs] = useState({
     General: '/downloads/General/',
@@ -150,7 +151,7 @@ export const IdmOptionsModal: React.FC<Props> = ({
       onUpdateMaxConnections(maxThreads);
     }
 
-    setSaveNotification('Internet Download Manager configuration saved successfully!');
+    setSaveNotification('Archimedes Download Manager configuration saved successfully!');
     setTimeout(() => {
       setSaveNotification(null);
       onClose();
@@ -167,7 +168,7 @@ export const IdmOptionsModal: React.FC<Props> = ({
     setBrowsers((prev) =>
       prev.map((b, i) => (i === index ? { ...b, enabled: true, autoIntegrated: true } : b))
     );
-    setSaveNotification(`Automatically registered Archimedes v0.62 extension into ${browsers[index].name}!`);
+    setSaveNotification(`Automatically registered Archimedes ${APP_VERSION_SHORT} extension into ${browsers[index].name}!`);
     setTimeout(() => setSaveNotification(null), 3000);
   };
 
@@ -178,13 +179,13 @@ export const IdmOptionsModal: React.FC<Props> = ({
         style={{ resize: 'both', overflow: 'auto' }}
       >
         {/* Title Bar */}
-        <div className={`px-3.5 py-2.5 flex items-center justify-between select-none border-b pr-8 ${theme.header}`}>
+        <div className={`px-3.5 py-2.5 flex items-center justify-between select-none border-b pr-8 rounded-t-xl ${theme.header}`}>
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <div className="w-5 h-5 rounded bg-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm shrink-0">
               <Sliders className="w-3.5 h-3.5" />
             </div>
             <h2 className={`text-xs sm:text-sm font-extrabold tracking-tight truncate ${theme.headerTitle}`}>
-              Archimedes Download Manager Configuration (v0.62)
+              Archimedes Download Manager Configuration ({APP_VERSION_SHORT})
             </h2>
           </div>
           <button
@@ -306,7 +307,7 @@ export const IdmOptionsModal: React.FC<Props> = ({
                     onChange={(e) => setLaunchOnStartup(e.target.checked)}
                     className="rounded text-indigo-600 focus:ring-0"
                   />
-                  <span>Launch Internet Download Manager on system startup</span>
+                  <span>Launch Archimedes Download Manager on system startup</span>
                 </label>
                 <label className={`flex items-center gap-2 cursor-pointer ${theme.textSecondary}`}>
                   <input
@@ -445,7 +446,7 @@ export const IdmOptionsModal: React.FC<Props> = ({
                     <option value={32}>32 Connections (Extreme)</option>
                   </select>
                   <p className={`text-[10px] ${theme.textMuted}`}>
-                    IDM dynamically segments files into these worker channels to saturate available bandwidth.
+                    ADM dynamically segments files into these worker channels to saturate available bandwidth.
                   </p>
                 </div>
               </div>
@@ -520,7 +521,7 @@ export const IdmOptionsModal: React.FC<Props> = ({
                 </div>
 
                 <div className="space-y-1 pt-1">
-                  <label className={`text-[11px] ${theme.textSecondary}`}>Temporary Download Directory (.idm_temp):</label>
+                  <label className={`text-[11px] ${theme.textSecondary}`}>Temporary Download Directory (.adm_temp):</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -531,7 +532,7 @@ export const IdmOptionsModal: React.FC<Props> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        const dirs = ['/downloads/.idm_temp/', 'C:\\Users\\User\\AppData\\Local\\Temp\\idm\\', 'D:\\Temp\\.idm_temp\\'];
+                        const dirs = ['/downloads/.adm_temp/', 'C:\\Users\\User\\AppData\\Local\\Temp\\adm\\', 'D:\\Temp\\.adm_temp\\'];
                         const nextIndex = (dirs.indexOf(tempDir) + 1) % dirs.length;
                         setTempDir(dirs[nextIndex]);
                       }}
@@ -677,7 +678,7 @@ export const IdmOptionsModal: React.FC<Props> = ({
                   <span>Automatically Intercept File Extensions</span>
                 </div>
                 <p className={`text-[11px] ${theme.textMuted}`}>
-                  IDM will automatically capture download requests for files with the following extensions:
+                  ADM will automatically capture download requests for files with the following extensions:
                 </p>
 
                 <textarea
@@ -694,7 +695,7 @@ export const IdmOptionsModal: React.FC<Props> = ({
                   <span>Don't Start Downloading Automatically From Address List</span>
                 </div>
                 <p className={`text-[11px] ${theme.textMuted}`}>
-                  List web domains or URLs where IDM should never automatically intercept downloads:
+                  List web domains or URLs where ADM should never automatically intercept downloads:
                 </p>
 
                 <textarea
@@ -876,10 +877,10 @@ export const IdmOptionsModal: React.FC<Props> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className={`px-3 py-2 border-t flex items-center justify-between shrink-0 relative ${theme.footer}`}>
+        <div className={`px-3 py-2 border-t flex items-center justify-between shrink-0 relative rounded-b-xl ${theme.footer}`}>
           <div className={`text-[10px] flex items-center gap-1.5 truncate ${theme.textMuted}`}>
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span className="truncate">IDM v6.42 Engine Active</span>
+            <span className="truncate">Archimedes {APP_VERSION_SHORT} Engine Active</span>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0 pr-2">

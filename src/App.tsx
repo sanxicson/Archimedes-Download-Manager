@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { DownloadTask, DownloadSegment, BandwidthPoint, IdmStateFile } from './types/idm';
+import { DownloadTask, DownloadSegment, BandwidthPoint, AdmStateFile } from './types/adm';
 import { ColorTheme } from './utils/modalTheme';
-import { IdmHeader } from './components/IdmHeader';
+import { AdmHeader } from './components/AdmHeader';
 import { DownloadList } from './components/DownloadList';
 import { SegmentVisualizer } from './components/SegmentVisualizer';
 import { SpeedGraph } from './components/SpeedGraph';
@@ -11,8 +11,8 @@ import { VideoGrabberPanel } from './components/VideoGrabberPanel';
 import { ExportExeModal } from './components/ExportExeModal';
 import { FirefoxExtensionModal } from './components/FirefoxExtensionModal';
 import { InstallExtensionModal } from './components/InstallExtensionModal';
-import { ClassicIdmLayout } from './components/ClassicIdmLayout';
-import { IdmOptionsModal } from './components/IdmOptionsModal';
+import { ClassicAdmLayout } from './components/ClassicAdmLayout';
+import { AdmOptionsModal } from './components/AdmOptionsModal';
 import { UiStyleSelectorModal, UiStyleOption } from './components/UiStyleSelectorModal';
 import { Sparkles, Monitor, Layout } from 'lucide-react';
 import {
@@ -40,11 +40,11 @@ export default function App() {
   const [isCompactWindow, setIsCompactWindow] = useState<boolean>(true);
   const [speedLimitKbps, setSpeedLimitKbps] = useState(0); // 0 = unlimited
   const [colorTheme, setColorTheme] = useState<ColorTheme>(() => {
-    return (localStorage.getItem('idm_color_theme') as ColorTheme) || 'light';
+    return (localStorage.getItem('adm_color_theme') as ColorTheme) || 'light';
   });
 
   useEffect(() => {
-    localStorage.setItem('idm_color_theme', colorTheme);
+    localStorage.setItem('adm_color_theme', colorTheme);
   }, [colorTheme]);
 
   // Downloads State
@@ -105,8 +105,8 @@ export default function App() {
           const etaSeconds = currentSpeedBps > 0 ? Math.ceil(remainingBytes / currentSpeedBps) : 0;
           const isComplete = newDownloadedBytes >= task.totalSize;
 
-          // Sync .idm_state
-          const updatedStateFile: IdmStateFile = {
+          // Sync .adm_state
+          const updatedStateFile: AdmStateFile = {
             ...task.stateFile,
             speedLimitBps: speedLimitKbps * 1024,
             lastSavedAt: new Date().toISOString(),
@@ -260,7 +260,9 @@ export default function App() {
     targetUrl: string,
     targetFilename: string,
     threads: number,
-    totalBytes: number
+    totalBytes: number,
+    saveFolder: string = '/downloads/',
+    promptForLocation: boolean = false
   ) => {
     let cancelled = false;
 
@@ -319,8 +321,9 @@ export default function App() {
         })
       );
 
-      // Automatically trigger browser file download to local Downloads folder
-      await saveFileToDisk(blob, targetFilename, false);
+      // Save file to chosen folder location or trigger file picker if custom folder selected
+      const forcePicker = promptForLocation || (saveFolder !== '/downloads/' && saveFolder !== '/downloads');
+      await saveFileToDisk(blob, targetFilename, forcePicker);
     } catch (err) {
       console.error('[App] Real download failed:', err);
     }
@@ -330,7 +333,10 @@ export default function App() {
     url: string,
     filename: string,
     threads: number,
-    speedLimit: number
+    speedLimit: number,
+    category: any = 'General',
+    saveFolder: string = '/downloads/',
+    promptForLocation: boolean = false
   ) => {
     // Probe real URL
     const meta = await probeFileInfo(url);
@@ -354,11 +360,13 @@ export default function App() {
       };
     });
 
+    const formattedSavePath = saveFolder.endsWith('/') ? `${saveFolder}${realFilename}` : `${saveFolder}/${realFilename}`;
+
     const newTask: DownloadTask = {
       id: taskId,
       filename: realFilename,
       url,
-      category: 'General',
+      category: (category as any) || 'General',
       totalSize: realSize,
       downloadedBytes: 0,
       status: 'Downloading',
@@ -366,7 +374,7 @@ export default function App() {
       threadsCount: threads,
       speedLimitBps: speedLimit * 1024,
       etaSeconds: 0,
-      savePath: `/downloads/${realFilename}`,
+      savePath: formattedSavePath,
       createdAt: new Date().toISOString(),
       segments,
       stateFile: {
@@ -388,7 +396,7 @@ export default function App() {
     setTasks((prev) => [newTask, ...prev]);
     setSelectedTaskId(taskId);
 
-    startRealTaskExecution(taskId, url, realFilename, threads, realSize);
+    startRealTaskExecution(taskId, url, realFilename, threads, realSize, saveFolder, promptForLocation);
   };
 
   // Poll extension queue for automatic download interception from Firefox/Chrome extension
@@ -484,7 +492,7 @@ export default function App() {
         const res = await fetch(`/api/download-chunk?url=${encodeURIComponent(task.url)}`);
         blob = await res.blob();
       } catch {
-        blob = new Blob([`Downloaded contents for ${task.filename}\nVia IDM Engine.`], {
+        blob = new Blob([`Downloaded contents for ${task.filename}\nVia ADM Engine.`], {
           type: 'application/octet-stream',
         });
       }
@@ -496,45 +504,36 @@ export default function App() {
     setIsOptionsModalOpen(true);
   };
 
-  const appBgClasses: Record<ColorTheme, string> = {
-    slate: 'bg-slate-950 text-slate-100',
-    light: 'bg-slate-200 text-slate-900',
-    amoled: 'bg-black text-zinc-100',
-    retro: 'bg-slate-400 text-slate-900',
-    cyber: 'bg-zinc-950 text-purple-100',
-  };
+
 
   return (
-    <div className={`min-h-screen ${appBgClasses[colorTheme] || appBgClasses.slate} flex flex-col justify-center items-center p-3 sm:p-6 font-sans transition-colors duration-200`}>
-      {/* Main Small Desktop Window Container */}
-      <div className={`w-full ${isCompactWindow ? 'max-w-4xl' : 'max-w-7xl'}`}>
-        <ClassicIdmLayout
-          tasks={tasks}
-          selectedTaskId={selectedTaskId}
-          onSelectTask={setSelectedTaskId}
-          onPauseTask={(id) =>
-            setTasks((prev) =>
-              prev.map((t) => (t.id === id ? { ...t, status: 'Paused', currentSpeedBps: 0 } : t))
-            )
-          }
-          onResumeTask={(id) =>
-            setTasks((prev) =>
-              prev.map((t) => (t.id === id ? { ...t, status: 'Downloading' } : t))
-            )
-          }
-          onDeleteTask={(id) => setTasks((prev) => prev.filter((t) => t.id !== id))}
-          onOpenAddModal={() => setIsAddModalOpen(true)}
-          onStopAll={() => setTasks((prev) => prev.map((t) => ({ ...t, status: 'Paused', currentSpeedBps: 0 })))}
-          onResumeAll={() => setTasks((prev) => prev.map((t) => ({ ...t, status: 'Downloading' })))}
-          totalSpeedBps={totalSpeedBps}
-          speedLimitKbps={speedLimitKbps}
-          onToggleSpeedLimitModal={handleToggleSpeedLimitModal}
-          onInstallExtensionClick={() => setIsInstallExtensionOpen(true)}
-          onOpenUiSelector={() => setIsUiSelectorOpen(true)}
-          colorTheme={colorTheme}
-          onChangeColorTheme={setColorTheme}
-        />
-      </div>
+    <div className="h-screen flex flex-col font-sans transition-colors duration-200 overflow-hidden">
+      <ClassicAdmLayout
+        tasks={tasks}
+        selectedTaskId={selectedTaskId}
+        onSelectTask={setSelectedTaskId}
+        onPauseTask={(id) =>
+          setTasks((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, status: 'Paused', currentSpeedBps: 0 } : t))
+          )
+        }
+        onResumeTask={(id) =>
+          setTasks((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, status: 'Downloading' } : t))
+          )
+        }
+        onDeleteTask={(id) => setTasks((prev) => prev.filter((t) => t.id !== id))}
+        onOpenAddModal={() => setIsAddModalOpen(true)}
+        onStopAll={() => setTasks((prev) => prev.map((t) => ({ ...t, status: 'Paused', currentSpeedBps: 0 })))}
+        onResumeAll={() => setTasks((prev) => prev.map((t) => ({ ...t, status: 'Downloading' })))}
+        totalSpeedBps={totalSpeedBps}
+        speedLimitKbps={speedLimitKbps}
+        onToggleSpeedLimitModal={handleToggleSpeedLimitModal}
+        onInstallExtensionClick={() => setIsInstallExtensionOpen(true)}
+        onOpenUiSelector={() => setIsUiSelectorOpen(true)}
+        colorTheme={colorTheme}
+        onChangeColorTheme={setColorTheme}
+      />
 
       {/* Modals */}
       <AddDownloadModal
@@ -564,7 +563,7 @@ export default function App() {
         onAddDownload={handleAddDownload}
       />
 
-      <IdmOptionsModal
+      <AdmOptionsModal
         isOpen={isOptionsModalOpen}
         onClose={() => setIsOptionsModalOpen(false)}
         speedLimitKbps={speedLimitKbps}

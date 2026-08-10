@@ -5,7 +5,15 @@ import { Download, X, Layers, Gauge, Folder, ShieldCheck, Sparkles, FileCode } f
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onAddDownload: (url: string, filename: string, threads: number, speedLimitKbps: number, category: any) => void;
+  onAddDownload: (
+    url: string,
+    filename: string,
+    threads: number,
+    speedLimitKbps: number,
+    category: any,
+    saveFolder?: string,
+    promptForLocation?: boolean
+  ) => void;
   colorTheme?: ColorTheme;
 }
 
@@ -14,6 +22,8 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
   const [filename, setFilename] = useState('BigBuckBunny_4K_Sample.mp4');
   const [threads, setThreads] = useState(8);
   const [speedLimitKbps, setSpeedLimitKbps] = useState(0); // 0 = unlimited
+  const [saveFolder, setSaveFolder] = useState('/downloads/');
+  const [promptForLocation, setPromptForLocation] = useState(false);
 
   if (!isOpen) return null;
 
@@ -50,14 +60,14 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url || !filename) return;
-    onAddDownload(url, filename, threads, speedLimitKbps, 'General');
+    onAddDownload(url, filename, threads, speedLimitKbps, 'General', saveFolder, promptForLocation);
     onClose();
   };
 
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-2 animate-fadeIn ${theme.backdrop}`}>
       <div
-        className={`rounded-xl w-[33vw] min-w-[320px] max-w-[95vw] min-h-[240px] max-h-[85vh] p-3.5 shadow-2xl relative flex flex-col justify-between ${theme.window}`}
+        className={`rounded-xl w-[33vw] min-w-[320px] max-w-[95vw] min-h-[240px] max-h-[85vh] shadow-2xl relative flex flex-col ${theme.window}`}
         style={{ resize: 'both', overflow: 'auto' }}
       >
         <button
@@ -67,10 +77,12 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
           <X className="w-4 h-4" />
         </button>
 
-        <div className={`flex items-center gap-2 mb-2.5 pb-2 border-b pr-8 ${theme.header}`}>
+        <div className={`flex items-center gap-2 px-3.5 py-2.5 border-b pr-8 rounded-t-xl ${theme.header}`}>
           <Download className="w-4 h-4 text-indigo-500 shrink-0" />
           <h3 className={`font-extrabold text-xs sm:text-sm truncate ${theme.headerTitle}`}>Add New Download Task</h3>
         </div>
+
+        <div className="flex-1 overflow-y-auto px-3.5 py-2.5">
 
         {/* Real Test URL Presets */}
         <div className="mb-2.5">
@@ -120,6 +132,53 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
             />
           </div>
 
+          <div>
+            <label className={`block font-medium mb-0.5 text-[11px] flex items-center justify-between ${theme.textSecondary}`}>
+              <span className="flex items-center gap-1">
+                <Folder className="w-3 h-3 text-amber-500" /> Save To Folder Directory
+              </span>
+              <span className="text-[10px] text-indigo-400 font-mono">
+                {saveFolder === '/downloads/' ? 'Default Downloads' : saveFolder}
+              </span>
+            </label>
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                value={saveFolder}
+                onChange={(e) => setSaveFolder(e.target.value)}
+                className={`flex-1 rounded-lg px-2.5 py-1 text-xs font-mono focus:outline-none ${theme.input}`}
+                placeholder="/downloads/ or C:\Downloads\"
+              />
+              <select
+                value={['/downloads/', '/downloads/Documents/', '/downloads/Videos/', '/downloads/Music/', '/downloads/Compressed/'].includes(saveFolder) ? saveFolder : 'custom'}
+                onChange={(e) => {
+                  if (e.target.value !== 'custom') {
+                    setSaveFolder(e.target.value);
+                  }
+                }}
+                className={`rounded-lg px-2 py-1 text-xs focus:outline-none ${theme.input}`}
+              >
+                <option value="/downloads/">Default Downloads (/downloads/)</option>
+                <option value="/downloads/Documents/">Documents Folder</option>
+                <option value="/downloads/Videos/">Videos Folder</option>
+                <option value="/downloads/Music/">Music Folder</option>
+                <option value="/downloads/Compressed/">Compressed Zip Folder</option>
+                <option value="custom">Custom Folder Path...</option>
+              </select>
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <label className="flex items-center gap-1.5 text-[11px] cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={promptForLocation}
+                  onChange={(e) => setPromptForLocation(e.target.checked)}
+                  className="rounded accent-indigo-500 cursor-pointer"
+                />
+                <span className={theme.textSecondary}>Choose folder location with file picker when download finishes</span>
+              </label>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className={`block font-medium mb-0.5 text-[11px] flex items-center justify-between ${theme.textSecondary}`}>
@@ -160,7 +219,7 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
           <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-lg p-2 text-[10px] text-emerald-300 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span>
-              Real Downloader Engine Active: IDM will fetch HTTP streams and write to local disk.
+              Real Downloader Engine Active: ADM will fetch HTTP streams and write to local disk.
             </span>
           </div>
 
@@ -185,6 +244,7 @@ export const AddDownloadModal: React.FC<Props> = ({ isOpen, onClose, onAddDownlo
             </div>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

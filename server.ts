@@ -1,6 +1,5 @@
 import express from 'express';
 import path from 'path';
-import { createServer as createViteServer } from 'vite';
 
 async function startServer() {
   const app = express();
@@ -16,12 +15,12 @@ async function startServer() {
         return res.status(400).json({ error: 'URL is required' });
       }
 
-      console.log(`[IDM Engine] Probing URL: ${url}`);
+      console.log(`[ADM Engine] Probing URL: ${url}`);
       
       // Attempt HEAD request first
       let response = await fetch(url, {
         method: 'HEAD',
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) InternetDownloadManager/2.5' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ArchimedesDownloadManager/2.5' },
       }).catch(() => null);
 
       // If HEAD is disallowed or fails, fallback to GET range 0-0
@@ -29,7 +28,7 @@ async function startServer() {
         response = await fetch(url, {
           method: 'GET',
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) InternetDownloadManager/2.5',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ArchimedesDownloadManager/2.5',
             'Range': 'bytes=0-0',
           },
         }).catch(() => null);
@@ -83,7 +82,7 @@ async function startServer() {
         etag: response.headers.get('etag') || '',
       });
     } catch (err: any) {
-      console.error('[IDM Engine Error] File probe failed:', err);
+      console.error('[ADM Engine Error] File probe failed:', err);
       return res.status(500).json({ error: err.message || 'File info lookup failed' });
     }
   });
@@ -100,7 +99,7 @@ async function startServer() {
       }
 
       const headers: Record<string, string> = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) InternetDownloadManager/2.5',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ArchimedesDownloadManager/2.5',
       };
 
       if (start !== undefined && end !== undefined) {
@@ -122,7 +121,7 @@ async function startServer() {
       const buffer = Buffer.from(arrayBuffer);
       return res.send(buffer);
     } catch (err: any) {
-      console.error('[IDM Engine Error] Chunk fetch failed:', err);
+      console.error('[ADM Engine Error] Chunk fetch failed:', err);
       return res.status(500).send(err.message || 'Chunk proxy failed');
     }
   });
@@ -142,8 +141,8 @@ async function startServer() {
       referrer,
     };
     pendingQueue.push(item);
-    console.log(`[IDM Engine] Queue download request received for: ${url}`);
-    res.json({ success: true, message: 'Queued in IDM Engine', item });
+    console.log(`[ADM Engine] Queue download request received for: ${url}`);
+    res.json({ success: true, message: 'Queued in ADM Engine', item });
   });
 
   // API Route: Poll pending download queue for frontend UI
@@ -155,21 +154,32 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
+    const { createServer: createViteServer } = await import('vite');
+    const viteServer = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
-    app.use(vite.middlewares);
+    app.use(viteServer.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    // In the packaged Electron app APP_PATH points at the app.asar directory;
+    // when running plain `node dist/server.cjs` fall back to process.cwd().
+    const distPath = process.env.APP_PATH
+      ? path.join(process.env.APP_PATH, 'dist')
+      : path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[IDM Fullstack Server] Running on http://0.0.0.0:${PORT}`);
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[ADM Fullstack Server] Running on http://0.0.0.0:${PORT}`);
+    if (process.send) process.send({ type: 'engine-ready' });
+  });
+
+  server.on('error', (err: any) => {
+    console.error(`[ADM Server] Failed to bind port ${PORT}:`, err?.message || err);
+    if (process.send) process.send({ type: 'engine-error', message: err?.message || String(err) });
   });
 }
 

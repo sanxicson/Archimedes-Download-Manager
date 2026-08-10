@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NativeIpcMessage } from '../types/idm';
+import { NativeIpcMessage } from '../types/adm';
 import { Globe, Terminal, ArrowRightLeft, Radio, Play, CheckCircle2, Copy } from 'lucide-react';
 
 interface Props {
@@ -94,7 +94,7 @@ export const ExtensionSimulator: React.FC<Props> = ({ ipcLogs, onTriggerIntercep
             type="submit"
             className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-lg transition-all"
           >
-            Send to IDM Engine
+            Send to ADM Engine
           </button>
         </form>
       </div>

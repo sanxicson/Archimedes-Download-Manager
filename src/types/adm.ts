@@ -9,7 +9,7 @@ export interface DownloadSegment {
   color: string;
 }
 
-export interface IdmStateFile {
+export interface AdmStateFile {
   version: string;
   url: string;
   filename: string;
@@ -43,7 +43,7 @@ export interface DownloadTask {
   speedLimitBps: number; // 0 = unlimited
   etaSeconds: number;
   segments: DownloadSegment[];
-  stateFile: IdmStateFile;
+  stateFile: AdmStateFile;
   createdAt: string;
   completedAt?: string;
   savePath: string;

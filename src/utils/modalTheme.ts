@@ -21,7 +21,7 @@ export interface ModalThemeClasses {
   codeBg: string;
 }
 
-export function getModalThemeClasses(theme: ColorTheme = 'light'): ModalThemeClasses {
+export function getModalThemeClasses(theme: ColorTheme | string = 'light'): ModalThemeClasses {
   switch (theme) {
     case 'light':
     default:
@@ -131,4 +131,3 @@ export function getModalThemeClasses(theme: ColorTheme = 'light'): ModalThemeCla
       };
   }
 }
-

@@ -1,4 +1,4 @@
-// Real Downloader Utility Engine for IDM
+// Real Downloader Utility Engine for ADM
 // Handles HTTP Range probes, parallel multi-thread byte streaming, assembly, and saving to disk/Downloads folder
 
 export interface FileMetadata {
@@ -94,7 +94,7 @@ export async function saveFileToDisk(
         suggestedName: filename,
         types: [
           {
-            description: 'IDM Downloaded File',
+            description: 'ADM Downloaded File',
             accept: {
               [blob.type || 'application/octet-stream']: [extension || '.*'],
             },

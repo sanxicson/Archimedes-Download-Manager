@@ -1,5 +1,5 @@
 import React from 'react';
-import { DownloadTask, DownloadSegment } from '../types/idm';
+import { DownloadTask, DownloadSegment } from '../types/adm';
 import { Cpu, Zap, Pause, Play, Split, HardDrive, ShieldCheck } from 'lucide-react';
 
 interface Props {

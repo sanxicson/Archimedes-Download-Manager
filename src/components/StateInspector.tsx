@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DownloadTask, IdmStateFile } from '../types/idm';
+import { DownloadTask, AdmStateFile } from '../types/adm';
 import { FileJson, RefreshCw, AlertTriangle, ShieldCheck, Download, Zap, RotateCcw } from 'lucide-react';
 
 interface Props {
@@ -28,7 +28,7 @@ export const StateInspector: React.FC<Props> = ({
           <div className="flex items-center gap-2">
             <FileJson className="w-5 h-5 text-indigo-400" />
             <h3 className="font-semibold text-lg text-white">
-              State Persistence Inspector (<code className="text-indigo-300">{task.filename}.idm_state</code>)
+              State Persistence Inspector (<code className="text-indigo-300">{task.filename}.adm_state</code>)
             </h3>
           </div>
           <p className="text-xs text-slate-400 mt-1">
@@ -50,10 +50,10 @@ export const StateInspector: React.FC<Props> = ({
             <button
               onClick={onResumeFromState}
               className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg shadow flex items-center gap-1.5 transition-all"
-              title="Resume download from saved .idm_state without losing downloaded chunks"
+              title="Resume download from saved .adm_state without losing downloaded chunks"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Resume from .idm_state
+              Resume from .adm_state
             </button>
           )}
 
@@ -105,7 +105,7 @@ export const StateInspector: React.FC<Props> = ({
       <div className="mt-3 flex items-center justify-between text-xs text-slate-400">
         <span className="flex items-center gap-1 text-slate-400">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          Atomic Write Semantics: <code className="text-indigo-300">tokio::fs::rename(tmp, .idm_state)</code> prevents corruption
+          Atomic Write Semantics: <code className="text-indigo-300">tokio::fs::rename(tmp, .adm_state)</code> prevents corruption
         </span>
         <span className="text-slate-500 font-mono text-[11px]">
           SHA256 State Checksum Verified

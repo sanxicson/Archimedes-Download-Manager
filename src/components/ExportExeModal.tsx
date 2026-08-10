@@ -16,7 +16,7 @@ export const ExportExeModal: React.FC<Props> = ({ isOpen, onClose, colorTheme = 
   const theme = getModalThemeClasses(colorTheme);
 
   const commands = [
-    { title: '1. Export/Download project files', cmd: 'Click Settings -> Export ZIP in AI Studio top menu' },
+    { title: '1. Export/Download project files', cmd: 'Download project files or export workspace' },
     { title: '2. Install Electron Builder', cmd: 'npm install --save-dev electron electron-builder' },
     { title: '3. Package into Windows .exe', cmd: 'npx electron-builder --win nsis' },
   ];
@@ -34,7 +34,7 @@ export const ExportExeModal: React.FC<Props> = ({ isOpen, onClose, colorTheme = 
         style={{ resize: 'both', overflow: 'auto' }}
       >
         {/* Modal Header */}
-        <div className={`flex items-center justify-between p-3.5 sm:p-4 border-b pr-10 ${theme.header}`}>
+        <div className={`flex items-center justify-between p-3.5 sm:p-4 border-b pr-10 rounded-t-2xl ${theme.header}`}>
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="p-2 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-indigo-500 shrink-0">
               <Monitor className="w-4 h-4" />
@@ -104,7 +104,7 @@ export const ExportExeModal: React.FC<Props> = ({ isOpen, onClose, colorTheme = 
         </div>
 
         {/* Modal Footer */}
-        <div className={`p-3 border-t flex justify-end gap-2 relative ${theme.footer}`}>
+        <div className={`p-3 border-t flex justify-end gap-2 relative rounded-b-2xl ${theme.footer}`}>
           <button
             onClick={onClose}
             className={`px-3.5 py-1.5 font-bold text-xs rounded-lg transition-all mr-2 ${theme.btnPrimary}`}

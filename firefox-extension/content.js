@@ -1,15 +1,15 @@
-// Firefox IDM Content Script - Media Sniffer & Video Grabber Overlay
+// Firefox ADM Content Script - Media Sniffer & Video Grabber Overlay
 (function () {
-  console.log('[IDM Firefox] Sniffer active on page:', window.location.href);
+  console.log('[ADM Firefox] Sniffer active on page:', window.location.href);
 
-  function attachIdmVideoOverlay() {
+  function attachAdmVideoOverlay() {
     const videoElements = document.querySelectorAll('video');
     videoElements.forEach((video) => {
-      if (video.dataset.idmAttached) return;
-      video.dataset.idmAttached = 'true';
+      if (video.dataset.admAttached) return;
+      video.dataset.admAttached = 'true';
 
       const overlay = document.createElement('div');
-      overlay.className = 'idm-firefox-video-panel';
+      overlay.className = 'adm-firefox-video-panel';
       overlay.style.cssText = `
         position: absolute;
         top: 12px;
@@ -33,7 +33,7 @@
 
       overlay.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>Download with IDM</span>
+        <span>Download with Archimedes</span>
       `;
 
       overlay.addEventListener('click', (e) => {
@@ -50,10 +50,10 @@
           }),
         })
           .then(() => {
-            alert('IDM Firefox Extension: Stream grabbed and forwarded to IDM Engine!');
+            alert('ADM Firefox Extension: Stream grabbed and forwarded to ADM Engine!');
           })
           .catch(() => {
-            alert('IDM Firefox Extension: Forwarded to IDM Engine!');
+            alert('ADM Firefox Extension: Forwarded to ADM Engine!');
           });
       });
 
@@ -66,5 +66,5 @@
     });
   }
 
-  setInterval(attachIdmVideoOverlay, 1500);
+  setInterval(attachAdmVideoOverlay, 1500);
 })();

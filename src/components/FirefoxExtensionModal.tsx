@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { APP_VERSION, APP_VERSION_SHORT } from '../version';
 import { ColorTheme, getModalThemeClasses } from '../utils/modalTheme';
 import { X, Globe, Download, CheckCircle2, Copy, Sparkles, Check, Play, Video } from 'lucide-react';
 
@@ -55,7 +56,7 @@ export const FirefoxExtensionModal: React.FC<Props> = ({
   ]
 }`;
 
-  const backgroundCode = `// Firefox Archimedes Download Manager Background Script v0.62.0
+  const backgroundCode = `// Firefox Archimedes Download Manager Background Script v${APP_VERSION}
 const ADM_HOST = 'http://localhost:3000';
 
 browser.downloads.onCreated.addListener((downloadItem) => {
@@ -132,7 +133,7 @@ browser.contextMenus.create({
         style={{ resize: 'both', overflow: 'auto' }}
       >
         {/* Header */}
-        <div className={`flex items-center justify-between p-3.5 sm:p-4 border-b pr-10 ${theme.header}`}>
+        <div className={`flex items-center justify-between p-3.5 sm:p-4 border-b pr-10 rounded-t-2xl ${theme.header}`}>
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="p-2 bg-orange-500/10 border border-orange-500/30 rounded-xl text-orange-500 shrink-0">
               <Globe className="w-4 h-4" />
@@ -141,7 +142,7 @@ browser.contextMenus.create({
               <h3 className={`font-extrabold text-xs sm:text-sm flex items-center gap-2 truncate ${theme.headerTitle}`}>
                 <span>Mozilla Firefox Integration Module</span>
                 <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-500 border border-orange-500/30 shrink-0">
-                  v0.62.0
+                  {APP_VERSION_SHORT}
                 </span>
               </h3>
               <p className={`text-[11px] leading-tight truncate mt-0.5 ${theme.textMuted}`}>
@@ -315,7 +316,7 @@ browser.contextMenus.create({
         </div>
 
         {/* Footer */}
-        <div className={`p-3 border-t flex justify-between items-center text-xs relative ${theme.footer}`}>
+        <div className={`p-3 border-t flex justify-between items-center text-xs relative rounded-b-2xl ${theme.footer}`}>
           <span className={`text-[10px] truncate pr-2 ${theme.textMuted}`}>Firefox 100+ Gecko Extension API</span>
           <button
             onClick={onClose}

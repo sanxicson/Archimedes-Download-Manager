@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Internet Download Manager Integration Module",
+  "name": "Archimedes Download Manager Integration Module",
   "version": "2.5.0",
-  "description": "Official Firefox extension for Internet Download Manager. Automatically grabs YouTube videos, web media streams, and overrides browser downloads.",
+  "description": "Official Firefox extension for Archimedes Download Manager. Automatically grabs YouTube videos, web media streams, and overrides browser downloads.",
   "icons": {
     "48": "icon.png",
     "128": "icon.png"
@@ -18,7 +18,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "idm-integration-module@internetdownloadmanager.com",
+      "id": "archimedes-integration-module@archimedesdownloadmanager.com",
       "strict_min_version": "100.0"
     }
   },

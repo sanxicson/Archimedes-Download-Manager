@@ -1,6 +1,6 @@
 @echo off
 echo ====================================================
-echo   Internet Download Manager - Windows EXE Builder   
+echo   Archimedes Download Manager - Windows EXE Builder   
 echo ====================================================
 echo.
 echo Installing dependencies...

@@ -1,6 +1,6 @@
 # Archimedes Download Manager
 
-A modern fork of Internet Download Manager (IDM) built with React, Express, Vite, and Electron. Archimedes Download Manager brings IDM-style accelerated downloading to the web and desktop with a classic, instantly recognizable interface.
+A modern download manager built with React, Express, Vite, and Electron. Archimedes Download Manager brings ADM-style accelerated downloading to the web and desktop with a classic, instantly recognizable interface.
 
 > **Version 0.6** — Multi-browser extension integration, dynamic segment multiplexing, multi-part downloading, speed limiting, and real-time status monitoring.
 
@@ -16,9 +16,9 @@ A modern fork of Internet Download Manager (IDM) built with React, Express, Vite
 - **CORS-bypassing chunk proxy** — A local Express backend streams each segment, working around browser CORS restrictions on foreign file hosts.
 - **Speed limiting** — Global per-download bandwidth throttling with a live speed graph.
 - **Real-time monitoring** — Per-segment progress bars, live transfer speed, ETA, and a bandwidth history chart.
-- **`.idm_state` resume model** — Tracks active segments and completed ranges so downloads can be paused, simulated-crashed, and resumed from state.
+- **`.adm_state` resume model** — Tracks active segments and completed ranges so downloads can be paused, simulated-crashed, and resumed from state.
 - **Video & media grabbing** — In-page grabber panel snaps stream URLs from `<video>` elements and forwards them to the engine.
-- **Classic IDM UI** — Familiar header, download list, toolbar, and task inspector layout; multiple color themes (light, slate, AMOLED, retro, cyber) and compact/full window modes.
+- **Classic ADM UI** — Familiar header, download list, toolbar, and task inspector layout; multiple color themes (light, slate, AMOLED, retro, cyber) and compact/full window modes.
 - **Electron desktop build** — Package the whole thing as a native Windows `.exe` installer.
 
 ---
@@ -105,9 +105,9 @@ The extension in `firefox-extension/` integrates with the running engine at `htt
 
 What it does:
 
-- **Intercepts downloads** — cancels built-in browser downloads and forwards the URL to the IDM engine.
-- **Context menu** — right-click any link, video, audio, or image and choose **"Download with IDM"**.
-- **Video overlay** — a "Download with IDM" pill appears over `<video>` elements to grab media streams.
+- **Intercepts downloads** — cancels built-in browser downloads and forwards the URL to the ADM engine.
+- **Context menu** — right-click any link, video, audio, or image and choose **"Download with Archimedes Download Manager"**.
+- **Video overlay** — a "Download with Archimedes" pill appears over `<video>` elements to grab media streams.
 
 ---
 
@@ -115,7 +115,7 @@ What it does:
 
 1. **Probe** (`POST /api/file-info`) — the server inspects the target URL via HEAD (with a GET `bytes=0-0` fallback) and returns size, range support, ETag, content type, and filename.
 2. **Segment** — the engine splits the file into N byte ranges, one per worker thread.
-3. **Stream** (`GET /api/download-chunk?start=…&end=…`) — each worker downloads its range through the local proxy, which relays the request with an IDM user-agent and streams the bytes back. A direct `Range` fetch is attempted as a fallback.
+3. **Stream** (`GET /api/download-chunk?start=…&end=…`) — each worker downloads its range through the local proxy, which relays the request with an ADM user-agent and streams the bytes back. A direct `Range` fetch is attempted as a fallback.
 4. **Assemble & save** — completed segments are merged into a single `Blob` and written to disk (save-file picker or the browser's Downloads folder).
 
 ---
@@ -137,7 +137,6 @@ Copy `.env.example` to `.env`:
 
 | Variable         | Description                                       |
 |------------------|---------------------------------------------------|
-| `GEMINI_API_KEY` | Optional — Gemini AI API key (project scaffolding) |
 | `APP_URL`        | Host URL for self-referential links / callbacks   |
 
 ---
@@ -148,13 +147,13 @@ Copy `.env.example` to `.env`:
 - [ ] True disk-streaming (no in-memory blob assembly)
 - [ ] Download queue persistence and history
 - [ ] Remote URL / magnet support
-- [ ] Resumable `.idm_state` serialization to disk
+- [ ] Resumable `.adm_state` serialization to disk
 
 ---
 
 ## Disclaimer
 
-This project is a **fan-made, from-scratch reimplementation** inspired by the Internet Download Manager interface and workflow. It is not affiliated with, endorsed by, or connected to Tonec Inc. or the original IDM product. The codebase was written independently and does not contain proprietary IDM code.
+This project is an independent download manager application. It is not affiliated with, endorsed by, or connected to any third-party download management software.
 
 ---
 

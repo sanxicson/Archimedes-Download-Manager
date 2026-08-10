@@ -16,14 +16,14 @@ flowchart TB
         WorkStealer["Work Stealing Coordinator\\n(Dynamic Range Splitting & Reallocation)"]
         TokenBucket["Token Bucket Rate Limiter\\n(Global & Per-Thread Bandwidth Throttle)"]
         BufferPool["Async Disk Writer & Memory Buffer\\n(mmap / Sequential Chunk Assembler)"]
-        StatePersist["State Persistence Engine\\n(Atomic .idm_state JSON Write)"]
+        StatePersist["State Persistence Engine\\n(Atomic .adm_state JSON Write)"]
         
         Workers["Async Worker Pool\\n(Worker 1..N reqwest HTTP Range GET)"]
     end
 
     subgraph Storage["Storage Tier"]
         DiskFile["Final Output File\\n(Target File)"]
-        StateFile[".idm_state Metadata\\n(ETag, Ranges, Checksum)"]
+        StateFile[".adm_state Metadata\\n(ETag, Ranges, Checksum)"]
     end
 
     NetReq -->|chrome.runtime.sendNativeMessage| NM_Host
@@ -48,14 +48,14 @@ sequenceDiagram
     participant Host as Native Messaging Host
     participant Core as Rust Tokio Core Engine
     participant HTTP as Remote Server (HTTP/2)
-    participant Disk as Disk Storage (.idm_state)
+    participant Disk as Disk Storage (.adm_state)
 
     User->>Ext: Clicks File Link or Intercepts Video Stream
     Ext->>Host: stdio json payload (URL, Headers, Cookies)
     Host->>Core: Dispatch Download Request
     Core->>HTTP: HEAD /file.zip (Check Accept-Ranges, Content-Length, ETag)
     HTTP-->>Core: 200 OK (Content-Length: 104857600, Accept-Ranges: bytes, ETag: "xyz")
-    Core->>Disk: Initialize .idm_state (Range map: 8 equal segments)
+    Core->>Disk: Initialize .adm_state (Range map: 8 equal segments)
     
     par Async Range Workers
         Core->>HTTP: GET /file.zip (Range: bytes=0-13107199)
@@ -65,7 +65,7 @@ sequenceDiagram
 
     HTTP-->>Core: Stream HTTP Chunks
     Core->>Core: Apply TokenBucket Rate Limiter Throttle
-    Core->>Disk: Flush Memory Buffers & Update .idm_state
+    Core->>Disk: Flush Memory Buffers & Update .adm_state
 
     Note over Core,HTTP: Work Stealing Triggered!
     Core->>Core: Worker 3 finishes segment early
@@ -73,16 +73,16 @@ sequenceDiagram
     Core->>Core: Split Worker 7 range in half: [Mid, End] -> New Worker 3
     Core->>HTTP: Worker 3 requests GET (Range: bytes=Mid-End)
 
-    Core->>Disk: All Segments Completed -> Stitch File & Delete .idm_state
+    Core->>Disk: All Segments Completed -> Stitch File & Delete .adm_state
     Core-->>Host: Download Finished Event
     Host-->>Ext: Show Finished Notification
 `;
 
 export const MODULE_BREAKDOWN_DOC = `
-# Internet Download Manager (IDM) Architecture Specification
+# Archimedes Download Manager (ADM) Architecture Specification
 
 ## 1. Executive Summary
-This document defines the high-performance, multithreaded 1:1 architectural clone of Internet Download Manager (IDM). The core engine is implemented in **Rust** utilizing the **Tokio async framework** for high-concurrency non-blocking socket I/O, **Serde** for lockless state persistence, and a custom lock-free **Token Bucket** algorithm for precise connection pool rate-limiting.
+This document defines the high-performance, multithreaded 1:1 architectural clone of Archimedes Download Manager (ADM). The core engine is implemented in **Rust** utilizing the **Tokio async framework** for high-concurrency non-blocking socket I/O, **Serde** for lockless state persistence, and a custom lock-free **Token Bucket** algorithm for precise connection pool rate-limiting.
 
 ## 2. Core Subsystems
 
@@ -93,10 +93,10 @@ This document defines the high-performance, multithreaded 1:1 architectural clon
   - Extracts \`Content-Length\`, \`ETag\`, and \`Last-Modified\`.
   - Determines if server supports persistent HTTP/1.1 pipelining or HTTP/2 multiplexing.
 - **Segment Allocation**: If range requests are supported, the target size $L$ is divided into $N$ default worker slots (default: 8, configurable up to 32). Worker $i$ gets target range:
-  $$\\text{Start}_i = i \\times \\lfloor L / N \\rfloor, \\quad \\text{End}_i = (i == N-1) ? (L - 1) : ((i + 1) \\times \\lfloor L / N \\rfloor - 1)$$
+  $\\text{Start}_i = i \\times \\lfloor L / N \\rfloor, \\quad \\text{End}_i = (i == N-1) ? (L - 1) : ((i + 1) \\times \\lfloor L / N \\rfloor - 1)$
 
-### 2.2 Dynamic Reallocation & Work Stealing (The IDM Secret Sauce)
-Traditional split downloaders fail when one socket thread hits a slow network pipe or ISP throttling. IDM solves this via **Dynamic Work Stealing**:
+### 2.2 Dynamic Reallocation & Work Stealing (The ADM Secret Sauce)
+Traditional split downloaders fail when one socket thread hits a slow network pipe or ISP throttling. ADM solves this via **Dynamic Work Stealing**:
 - Each active worker reports progress to an asynchronous coordinator channel.
 - When Worker $A$ exhausts its allocated range, it enters the **Stealer State**.
 - The Coordinator scans all remaining active workers $W_1 \\dots W_k$ to locate the worker holding the **largest remaining un-downloaded byte range** ($\Delta = \\text{End} - \\text{Current}$).
@@ -105,9 +105,9 @@ Traditional split downloaders fail when one socket thread hits a slow network pi
   2. The target worker's boundary is shrunk to $[\\text{Current}, \\text{Mid}]$.
   3. Worker $A$ is spawned with target range $[\\text{Mid} + 1, \\text{End}]$.
 
-### 2.3 State Persistence (\`.idm_state\`)
+### 2.3 State Persistence (\`.adm_state\`)
 To guarantee instant pause/resume across unexpected system power failures or process kills:
-- A companion file \`<filename>.idm_state\` is atomically flushed to disk using standard write-replace semantics (\`rename\`).
+- A companion file \`<filename>.adm_state\` is atomically flushed to disk using standard write-replace semantics (\`rename\`).
 - Tracks state metadata:
   - \`url\`, \`etag\`, \`last_modified\`, \`total_bytes\`.
   - Array of ranges \`[start, current, end]\` and completed contiguous bitmaps.

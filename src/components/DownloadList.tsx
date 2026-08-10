@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DownloadTask } from '../types/idm';
+import { DownloadTask } from '../types/adm';
 import {
   Download,
   Pause,
@@ -318,4 +318,3 @@ export const DownloadList: React.FC<Props> = ({
     </div>
   );
 };
-

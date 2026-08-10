@@ -60,7 +60,7 @@ export const ArchitectureViewer: React.FC = () => {
 
         <div className="prose prose-invert max-w-none text-xs text-slate-300 leading-relaxed space-y-4">
           <p>
-            The Internet Download Manager (IDM) 1:1 architecture is engineered around a tri-tiered execution pipeline. The frontend desktop GUI (Qt / Tauri React) presents high-level download controls and bandwidth graphs, while delegating heavy network tasks to the <strong>Rust Tokio Core Daemon</strong>.
+            The Archimedes Download Manager (ADM) 1:1 architecture is engineered around a tri-tiered execution pipeline. The frontend desktop GUI (Qt / Tauri React) presents high-level download controls and bandwidth graphs, while delegating heavy network tasks to the <strong>Rust Tokio Core Daemon</strong>.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">

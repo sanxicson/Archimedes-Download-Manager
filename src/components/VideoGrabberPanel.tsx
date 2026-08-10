@@ -61,7 +61,7 @@ export const VideoGrabberPanel: React.FC<Props> = ({ onAddVideoDownload }) => {
               </span>
             </h3>
             <p className="text-xs text-slate-400">
-              When playing videos, IDM pops up a floating button over the video player displaying all available qualities and file sizes.
+              When playing videos, ADM pops up a floating button over the video player displaying all available qualities and file sizes.
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export const VideoGrabberPanel: React.FC<Props> = ({ onAddVideoDownload }) => {
         {downloadedFormat && (
           <div className="flex items-center gap-2 text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-lg animate-fade-in shadow-lg">
             <Check className="w-4 h-4 text-emerald-400" />
-            <span>Queued {downloadedFormat} in IDM Real Downloader!</span>
+            <span>Queued {downloadedFormat} in ADM Real Downloader!</span>
           </div>
         )}
       </div>
@@ -92,7 +92,7 @@ export const VideoGrabberPanel: React.FC<Props> = ({ onAddVideoDownload }) => {
         {/* Video Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/60 pointer-events-none" />
 
-        {/* --- IDM FLOATING "DOWNLOAD THIS VIDEO" AUTOMATIC POPUP --- */}
+        {/* --- ADM FLOATING "DOWNLOAD THIS VIDEO" AUTOMATIC POPUP --- */}
         <div className="relative z-20 self-end">
           <div className="relative">
             <button
@@ -104,12 +104,12 @@ export const VideoGrabberPanel: React.FC<Props> = ({ onAddVideoDownload }) => {
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* IDM Sniffed Resolutions & Sizes Menu */}
+            {/* ADM Sniffed Resolutions & Sizes Menu */}
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-xl border border-slate-700 rounded-xl shadow-2xl p-2.5 z-30 space-y-1 animate-in fade-in zoom-in-95">
                 <div className="px-2 py-1 text-[10px] uppercase font-mono font-bold text-slate-400 border-b border-slate-800 flex items-center justify-between mb-1">
                   <span>Detected Stream Resolutions</span>
-                  <span className="text-emerald-400 font-semibold">IDM Sniffer v2.5</span>
+                  <span className="text-emerald-400 font-semibold">ADM Sniffer v2.5</span>
                 </div>
 
                 {videoStreams.map((stream) => (

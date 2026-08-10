@@ -13,10 +13,10 @@ export const RUST_CODEBASE: RustFile[] = [
     language: "toml",
     description: "Cargo dependencies for production-grade async networking stack",
     code: `[package]
-name = "idm_core_engine"
+name = "adm_core_engine"
 version = "2.5.0"
 edition = "2021"
-authors = ["IDM Core Team <engine@idm.internal>"]
+authors = ["ADM Core Team <engine@adm.internal>"]
 description = "High-performance Tokio-based multithreaded segmented downloader with dynamic work stealing"
 
 [dependencies]
@@ -94,7 +94,7 @@ pub struct SegmentedDownloader {
 impl SegmentedDownloader {
     pub fn new(config: DownloaderConfig, state_dir: PathBuf) -> Self {
         let client = Client::builder()
-            .user_agent("IDM/7.1 (Windows NT 10.0; Win64; x64) CoreEngine/2.5")
+            .user_agent("ADM/7.1 (Windows NT 10.0; Win64; x64) CoreEngine/2.5")
             .pool_max_idle_per_host(32)
             .build()
             .expect("Failed to initialize HTTP client");
@@ -163,7 +163,7 @@ impl SegmentedDownloader {
         let state_path = StateManager::get_state_file_path(output_path);
 
         let download_state = if state_path.exists() {
-            info!("Existing .idm_state found. Attempting resume verification...");
+            info!("Existing .adm_state found. Attempting resume verification...");
             let mut state = self.state_manager.load_state(&state_path).await?;
             if state.etag != meta.etag && meta.etag.is_some() {
                 warn!("Remote ETag changed! Restarting download from scratch.");
@@ -236,7 +236,7 @@ impl SegmentedDownloader {
             self.state_manager.save_state(&state_path, &current_snapshot).await?;
         }
 
-        info!("All chunks synchronized! Removing .idm_state metadata file.");
+        info!("All chunks synchronized! Removing .adm_state metadata file.");
         let _ = tokio::fs::remove_file(state_path).await;
         Ok(())
     }
@@ -496,7 +496,7 @@ impl TokenBucket {
     path: "src/engine/persistence.rs",
     filename: "persistence.rs",
     language: "rust",
-    description: "State Persistence (.idm_state serde JSON manager with atomic disk flushes)",
+    description: "State Persistence (.adm_state serde JSON manager with atomic disk flushes)",
     code: `// src/engine/persistence.rs
 use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
@@ -535,11 +535,11 @@ impl StateManager {
     pub fn get_state_file_path(target_file: &Path) -> PathBuf {
         let mut path = target_file.to_path_buf();
         let filename = path.file_name().unwrap_or_default().to_string_lossy();
-        path.set_file_name(format!("{}.idm_state", filename));
+        path.set_file_name(format!("{}.adm_state", filename));
         path
     }
 
-    /// Atomically flushes .idm_state using temporary file & rename semantics
+    /// Atomically flushes .adm_state using temporary file & rename semantics
     pub async fn save_state(&self, state_file_path: &Path, state: &DownloadState) -> Result<()> {
         let tmp_path = state_file_path.with_extension("tmp_state");
         let serialized = serde_json::to_string_pretty(state)?;

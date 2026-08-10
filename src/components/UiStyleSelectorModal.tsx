@@ -67,7 +67,7 @@ export const UiStyleSelectorModal: React.FC<Props> = ({
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-2 animate-fadeIn ${theme.backdrop}`}>
       <div
-        className={`rounded-2xl w-[33vw] min-w-[320px] max-w-[95vw] min-h-[280px] max-h-[85vh] p-3.5 shadow-2xl relative flex flex-col justify-between ${theme.window}`}
+        className={`rounded-2xl w-[33vw] min-w-[320px] max-w-[95vw] min-h-[280px] max-h-[85vh] shadow-2xl relative flex flex-col ${theme.window}`}
         style={{ resize: 'both', overflow: 'auto' }}
       >
         <button
@@ -77,13 +77,13 @@ export const UiStyleSelectorModal: React.FC<Props> = ({
           <X className="w-5 h-5" />
         </button>
 
-        <div className={`flex items-center gap-3 mb-4 pb-3 border-b pr-10 ${theme.header}`}>
+        <div className={`flex items-center gap-3 px-3.5 py-3 border-b pr-10 rounded-t-2xl ${theme.header}`}>
           <div className="p-2 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-indigo-500 shrink-0">
             <Layout className="w-5 h-5" />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className={`font-extrabold text-xs sm:text-sm flex items-center gap-2 truncate ${theme.headerTitle}`}>
-              <span>Choose IDM Interface Style</span>
+              <span>Choose ADM Interface Style</span>
               <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-500 border border-indigo-500/30 shrink-0">
                 4 UI OPTIONS
               </span>
@@ -93,6 +93,8 @@ export const UiStyleSelectorModal: React.FC<Props> = ({
             </p>
           </div>
         </div>
+
+        <div className="flex-1 overflow-y-auto px-3.5 py-3">
 
         {/* Small Window Size Toggle */}
         <div className={`border rounded-xl p-3.5 mb-4 flex items-center justify-between ${theme.card}`}>
@@ -106,7 +108,7 @@ export const UiStyleSelectorModal: React.FC<Props> = ({
                 </span>
               </div>
               <div className={`text-[11px] ${theme.textMuted}`}>
-                Restricts UI width to a small floating IDM app window (like real IDM on Windows)
+                Restricts UI width to a small floating ADM app window (like real ADM on Windows)
               </div>
             </div>
           </div>
@@ -197,8 +199,9 @@ export const UiStyleSelectorModal: React.FC<Props> = ({
             );
           })}
         </div>
+        </div>
 
-        <div className={`pt-2 border-t flex justify-end gap-2 relative ${theme.footer}`}>
+        <div className={`px-3.5 py-2.5 border-t flex justify-end gap-2 relative rounded-b-2xl ${theme.footer}`}>
           <button
             onClick={onClose}
             className={`px-4 py-1.5 font-extrabold text-xs rounded-xl shadow-lg transition-all mr-2 ${theme.btnPrimary}`}

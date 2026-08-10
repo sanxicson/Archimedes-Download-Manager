@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { APP_VERSION, APP_VERSION_SHORT } from '../version';
 import { ColorTheme, getModalThemeClasses } from '../utils/modalTheme';
 import {
   Globe,
@@ -118,7 +119,7 @@ export const InstallExtensionModal: React.FC<Props> = ({
     },
   };
 
-  const backgroundJsCode = `// Archimedes Download Manager (ADM) v0.62.0 Background Service Worker
+  const backgroundJsCode = `// Archimedes Download Manager (ADM) v${APP_VERSION} Background Service Worker
 const ADM_HOST = 'http://localhost:3000';
 
 // Intercept browser downloads
@@ -263,7 +264,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
   };
 
   const handleDownloadFullZip = () => {
-    const zipContent = `=== ARCHIMEDES DOWNLOAD MANAGER BROWSER EXTENSION SUITE v0.62.0 ===\n\n` +
+    const zipContent = `=== ARCHIMEDES DOWNLOAD MANAGER BROWSER EXTENSION SUITE v${APP_VERSION} ===\n\n` +
       `MANIFEST.JSON:\n${JSON.stringify(manifestV3Json, null, 2)}\n\n` +
       `BACKGROUND.JS:\n${backgroundJsCode}\n\n` +
       `CONTENT.JS:\n${contentJsCode}\n\n` +
@@ -276,7 +277,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `archimedes-extension-v0.62.0-${selectedBrowser}.txt`;
+    a.download = `archimedes-extension-v${APP_VERSION}-${selectedBrowser}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -389,7 +390,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn ${theme.backdrop}`}>
       <div
-        className={`rounded-2xl w-[33vw] min-w-[320px] max-w-[95vw] min-h-[380px] max-h-[90vh] p-4 shadow-2xl relative flex flex-col justify-between ${theme.window}`}
+        className={`rounded-2xl w-[33vw] min-w-[320px] max-w-[95vw] min-h-[380px] max-h-[90vh] shadow-2xl relative flex flex-col ${theme.window}`}
         style={{ resize: 'both', overflow: 'auto' }}
       >
         {/* Close Button */}
@@ -401,7 +402,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
         </button>
 
         {/* Header */}
-        <div className={`flex items-center gap-3.5 mb-3 pb-3 border-b pr-10 ${theme.header}`}>
+        <div className={`flex items-center gap-3.5 px-4 py-3 border-b pr-10 rounded-t-2xl ${theme.header}`}>
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-600 to-purple-600 p-0.5 shadow-lg flex items-center justify-center shrink-0">
             <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
               <Globe className="w-5 h-5 text-sky-400" />
@@ -413,7 +414,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
                 Universal Browser Extension Hub
               </h3>
               <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30 shrink-0">
-                v0.62.0
+                {APP_VERSION_SHORT}
               </span>
             </div>
             <p className={`text-[11px] leading-tight mt-0.5 truncate ${theme.textMuted}`}>
@@ -422,6 +423,8 @@ chrome.contextMenus.onClicked.addListener((info) => {
           </div>
         </div>
 
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto px-4 py-3">
         {/* Top Browser Choice Selector Grid */}
         <div className="mb-3">
           <div className="text-[11px] font-bold uppercase tracking-wider mb-1.5 text-slate-500 flex items-center justify-between">
@@ -574,7 +577,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
                       </div>
                       <div className={`flex items-center gap-1.5 ${autoIntegrationStep >= 4 ? 'text-emerald-400' : 'text-slate-500'}`}>
                         {autoIntegrationStep >= 4 ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <div className="w-3 h-3 rounded-full border border-slate-600" />}
-                        <span>4. Archimedes Extension v0.62.0 linked and verified on port 3000!</span>
+                        <span>4. Archimedes Extension {APP_VERSION_SHORT} linked and verified on port 3000!</span>
                       </div>
                     </div>
                   </div>
@@ -873,8 +876,10 @@ chrome.contextMenus.onClicked.addListener((info) => {
           )}
         </div>
 
+        </div>
+
         {/* Modal Footer */}
-        <div className={`mt-3 pt-2.5 border-t flex items-center justify-between relative ${theme.footer}`}>
+        <div className={`px-4 py-2.5 border-t flex items-center justify-between relative rounded-b-2xl ${theme.footer}`}>
           <div className="flex items-center gap-2 text-[10px] text-slate-400">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span>Archimedes ADM Engine Port: 3000 (Active)</span>

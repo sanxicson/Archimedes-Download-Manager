@@ -1,16 +1,16 @@
-// Firefox IDM Integration Module - Background Service Worker
-const IDM_HOST = 'http://localhost:3000';
+// Firefox ADM Integration Module - Background Service Worker
+const ADM_HOST = 'http://localhost:3000';
 
-console.log('[IDM Firefox Extension] Background service initialized v2.5.0');
+console.log('[ADM Firefox Extension] Background service initialized v2.5.0');
 
-// Intercept browser downloads and route to IDM
+// Intercept browser downloads and route to ADM
 if (typeof browser !== 'undefined' && browser.downloads) {
   browser.downloads.onCreated.addListener((downloadItem) => {
-    console.log('[IDM Firefox] Intercepted new download item:', downloadItem.url);
+    console.log('[ADM Firefox] Intercepted new download item:', downloadItem.url);
 
-    // Cancel built-in browser download and pass to IDM
+    // Cancel built-in browser download and pass to ADM
     browser.downloads.cancel(downloadItem.id).then(() => {
-      fetch(`${IDM_HOST}/api/downloads`, {
+      fetch(`${ADM_HOST}/api/downloads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -19,24 +19,24 @@ if (typeof browser !== 'undefined' && browser.downloads) {
           referrer: downloadItem.referrer || '',
         }),
       }).catch((err) => {
-        console.warn('[IDM Firefox] Could not send to IDM engine at localhost:3000:', err);
+        console.warn('[ADM Firefox] Could not send to ADM engine at localhost:3000:', err);
       });
     });
   });
 
   // Register Firefox Context Menu
   browser.contextMenus.create({
-    id: 'idm-download-context',
-    title: 'Download with IDM',
+    id: 'adm-download-context',
+    title: 'Download with Archimedes Download Manager',
     contexts: ['link', 'video', 'audio', 'image'],
   });
 
   browser.contextMenus.onClicked.addListener((info) => {
-    if (info.menuItemId === 'idm-download-context') {
+    if (info.menuItemId === 'adm-download-context') {
       const targetUrl = info.linkUrl || info.srcUrl;
       if (targetUrl) {
-        console.log('[IDM Firefox] Context menu download trigger:', targetUrl);
-        fetch(`${IDM_HOST}/api/downloads`, {
+        console.log('[ADM Firefox] Context menu download trigger:', targetUrl);
+        fetch(`${ADM_HOST}/api/downloads`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -45,7 +45,7 @@ if (typeof browser !== 'undefined' && browser.downloads) {
             referrer: info.pageUrl || '',
           }),
         }).catch((err) => {
-          console.warn('[IDM Firefox] Could not send to IDM engine at localhost:3000:', err);
+          console.warn('[ADM Firefox] Could not send to ADM engine at localhost:3000:', err);
         });
       }
     }

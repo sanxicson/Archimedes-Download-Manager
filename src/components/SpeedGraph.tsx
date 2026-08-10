@@ -1,6 +1,6 @@
 import React from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
-import { BandwidthPoint } from '../types/idm';
+import { BandwidthPoint } from '../types/adm';
 import { Gauge, Sliders, Zap, ShieldAlert, Cpu } from 'lucide-react';
 
 interface Props {
